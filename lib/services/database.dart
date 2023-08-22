@@ -103,11 +103,11 @@ class DatabaseService{
               maps.add({subcatname : {'name' :name,'price':price,'amount':amount,'incdec':incdec,'percent':percent}});
           } 
           else{
-            maps.forEach((map) {
+            for (var map in maps) {
               if(map.keys.first != subcatname){
                 maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':(amount+1).toString(),'incdec':incdec,'percent':percent}};
               }
-            });
+            }
             await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'amounts':tempamounts});
           }
       }
