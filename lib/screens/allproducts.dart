@@ -56,12 +56,7 @@ class _AllProductsState extends State<AllProducts> {
       buttonTextFontSize: 27,
       backgroundColor: Colors.white70,
       onTapButton: ()async{
-        //SharedPreferences prefs = await SharedPreferences.getInstance();
-        //await prefs.setString('name', selection['name']);
-        //await prefs.setString('price', selection['price']);
-        //await prefs.setString('amount', selection['amount']);
-        //await prefs.setString('incdec', selection['incdec']);
-        //await prefs.setString('percent', selection['percent']);
+        
         await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['amount'],selection['incdec'],selection['percent']);
         setState(() {
         });
