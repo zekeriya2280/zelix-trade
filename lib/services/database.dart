@@ -93,12 +93,12 @@ class DatabaseService{
       }
       if(amounts != null && amounts[subcatname]==null){//AMOUNTS MAP HAS NO SUBCATEGORY ABOVE
       print('bbbbbbbb');
-        tempamounts = Amounts(amounts: amounts).toJson();
+        tempamounts = Amounts(amounts: amounts,subcatname: subcatname).toJson();
         tempamounts.addAll({subcatname: 1});
       }
       else{// AMOUNTS DEFINED AND THERE IS SUBCATNAME ABOVE IN IT
       
-        tempamounts = Amounts(amounts: amounts).toJson();
+        tempamounts = Amounts(amounts: amounts,subcatname: subcatname).toJson();
         print('tempamounts : '+tempamounts.toString());
         tempamounts.addAll({subcatname: tempamounts[subcatname]+1});
       }
@@ -123,7 +123,7 @@ class DatabaseService{
           else{
             for (var map in maps) {
               if(map.keys.first == subcatname){
-                maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':(tempamounts[subcatname]+1).toString(),'incdec':incdec,'percent':percent}};
+                maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':(tempamounts[subcatname]).toString(),'incdec':incdec,'percent':percent}};
               }
             }
             await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'amounts':tempamounts});
