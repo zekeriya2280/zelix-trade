@@ -35,12 +35,7 @@ class _MyProductsState extends State<MyProducts> {
   @override
   void initState() {
     super.initState();
-    checkamounts();
   }
-    void checkamounts()async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('appleamount', prefs.getString('appleamount') ?? '0');
-    }
   void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
       FeatureNotifier.persistAll();
