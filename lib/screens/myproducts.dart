@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/database.dart';

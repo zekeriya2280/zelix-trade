@@ -57,7 +57,7 @@ class _AllProductsState extends State<AllProducts> {
       backgroundColor: Colors.white70,
       onTapButton: ()async{
         
-        await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['amount'],selection['incdec'],selection['percent']);
+        await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']);
         setState(() {
         });
       }

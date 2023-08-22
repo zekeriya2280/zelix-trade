@@ -74,25 +74,37 @@ class DatabaseService{
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:maps});
   }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String amount,String incdec,String percent)async{
+  Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{
       DocumentSnapshot<Map<String, dynamic>> temp = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
       List<Categories> cats = [];
       List<Item> items = [];
       List<Map<String,dynamic>> maps = [];
+      Map<String, int> tempamounts = {};
       final data = temp.data()![categoryname];
+      final amounts = temp.data()!['amounts'];
+      final amount = temp.data()!['amounts'][subcatname];
+      print(amount);
       if(data == null){
-        addNewTopTabToME(categoryname,subcatname,name,price,amount,incdec,percent);
+        addNewTopTabToME(categoryname,subcatname,name,price,amount==null?"1":amount,incdec,percent);
+        tempamounts = amounts;
+        tempamounts.addAll({subcatname: (amount ?? 1)});
+        await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'amounts':tempamounts});
       }
-      print(data);
+      
       for (var i = 0; i < data.length; i++) {
         cats.add(Categories.fromJson(data[i].keys.first));
-        items.add(Item.fromJson(data[i],data[i].keys.first));
+        items.add(Item.fromJson(data[i],data[i].keys.first,));
       }
       for (var i = 0; i < cats.length; i++) {
         maps.add({cats[i].submap : items[i].toJson()});
       }
       for (var i = 0; i < temp.data()![categoryname].length; i++) {
-          List<Map<String,dynamic>>.from(temp.data()![categoryname]).every((itemmap)=>itemmap.keys.first != subcatname) ? maps.add({subcatname : {'name' :name,'price':price,'amount':amount,'incdec':incdec,'percent':percent}}) : null;
+          List<Map<String,dynamic>>.from(temp.data()![categoryname]).every((itemmap)=>itemmap.keys.first != subcatname) ? 
+              maps.add({subcatname : {'name' :name,'price':price,'amount':amount,'incdec':incdec,'percent':percent}}) : 
+              maps.forEach((map) {
+                map.keys.first != subcatname ? null : maps.add({subcatname : {'name' :name,'price':price,'amount':(amount+1).toString(),'incdec':incdec,'percent':percent}});
+              })
+              ;
       }
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({categoryname:maps});
   }
@@ -103,9 +115,9 @@ class DatabaseService{
       List<Item> items = [];
       List<Map<String,dynamic>> maps = [];
       final data = temp.data()![categoryname];
-      for (var map in data) {
-        cats.add(Categories.fromJson(map.keys.first.toString()));
-        items.add(Item.fromJson(map,map.keys.first.toString()));
+      for (var i = 0; i < data.length; i++) {
+        cats.add(Categories.fromJson(data[i].keys.first.toString()));
+        items.add(Item.fromJson(data[i],data[i].keys.first.toString()));
       }
       for (var i = 0; i < cats.length; i++) {
         maps.add({cats[i].submap : items[i].toJson()});
