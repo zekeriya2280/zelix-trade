@@ -18,15 +18,16 @@ class _AllProductsState extends State<AllProducts> {
   double height = 0;
   double width = 0;
   int proditemcount = 0;
+  bool breaker = true;
   String currenttoptab = 'vegetables';
   List<Map<String,dynamic>> vegslist = [];
   List<Map<String,dynamic>> frutslist = [];
   List<Map<String,dynamic>> toolslist = [];
   List<Map<String,dynamic>> kitchenslist = [];
-  List<String> vegis = ['tomatoes','pepper'];
-  List<String> frus = ['apple','pear'];
-  List<String> tols = ['pliers','hammer'];
-  List<String> kitchens = ['plastic','glass','spoon'];
+  List<String> vegis = [];
+  List<String> frus = [];
+  List<String> tols = [];
+  List<String> kitchens = [];
   List<String> dropdownitems = ['vegetables','fruits','tools','kitchen'];
   CollectionReference<Map<String, dynamic>> products= FirebaseFirestore.instance.collection('productions');
   
@@ -178,6 +179,34 @@ class _AllProductsState extends State<AllProducts> {
           }
           else if (currenttoptab == 'kitchen'){
             categoryGetter('kitchenslist');
+          }
+          for (var doc in snapshot.data!.docs) {
+              if (breaker) {
+                 if (doc.data()['vegetables'] != null) {
+                   for (var i = 0; i < doc.data()['vegetables'].length; i++) {
+                     vegis.add(doc.data()['vegetables'][i].keys.first);
+                   }
+                   breaker = false;
+                 }
+                 if (doc.data()['fruits'] != null) {
+                   for (var i = 0; i < doc.data()['fruits'].length; i++) {
+                     frus.add(doc.data()['fruits'][i].keys.first);
+                   }
+                   breaker = false;
+                 }
+                 if (doc.data()['tools'] != null) {
+                   for (var i = 0; i < doc.data()['tools'].length; i++) {
+                     tols.add(doc.data()['tools'][i].keys.first);
+                   }
+                   breaker = false;
+                 }
+                 if (doc.data()['kitchen'] != null) {
+                   for (var i = 0; i < doc.data()['kitchen'].length; i++) {
+                     kitchens.add(doc.data()['kitchen'][i].keys.first);
+                   }
+                   breaker = false;
+                 }
+            }
           }
         return Scaffold(
           appBar: AppBar(

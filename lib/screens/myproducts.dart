@@ -237,7 +237,6 @@ class _MyProductsState extends State<MyProducts> {
                    }
                    breaker = false;
                  }
-                 print(vegis);
                  if (doc.data()['fruits'] != null) {
                    for (var i = 0; i < doc.data()['fruits'].length; i++) {
                      frus.add(doc.data()['fruits'][i].keys.first);

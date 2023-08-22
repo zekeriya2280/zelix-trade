@@ -1,5 +1,3 @@
-import 'package:zelix_trade/services/database.dart';
-
 class Item{
   String name = "";
   String price = "";
@@ -17,16 +15,15 @@ class Item{
       percent: json[subname]['percent'],
     );
   }
-  factory Item.fromJsonMY(Map<String, dynamic> json,String subname){
+  factory Item.fromJsonMY(Map<String, dynamic> json,String subname,String amount){
     return Item(
       name: json[subname]['name'],
       price: json[subname]['price'],
-      amount: DatabaseService().amountFinderForMyProductsItems(subname).toString(),
+      amount: amount,
       incdec: json[subname]['incdec'],
       percent: json[subname]['percent'],
     );
   }
-  
   Map<String,dynamic> toJson(){
     Map<String,dynamic> data = <String, dynamic>{};
     data['name'] = name;
