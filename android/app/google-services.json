@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "671799582710",
+    "project_id": "zelixtrade",
+    "storage_bucket": "zelixtrade.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671799582710:android:e2529db83fc090860831d7",
+        "android_client_info": {
+          "package_name": "com.zelixtrade.zelix_trade"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671799582710-3s1eonvitsljustqq5rhakh3q2qpp999.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUSV-sYxF0VdIKjPzkq3o3UWfI6OhgRy0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671799582710-3s1eonvitsljustqq5rhakh3q2qpp999.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
