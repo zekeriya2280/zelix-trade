@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/screens/myproducts.dart';
 import 'package:zelix_trade/services/database.dart';
@@ -38,7 +39,8 @@ class _AllProductsState extends State<AllProducts> {
     });
 
   }
-  void productDetails(int index,Map<String, dynamic> selection){
+  void productDetails(int index,Map<String, dynamic> selection)async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     WidgetsBinding.instance.addPostFrameCallback((_) {
     FeatureAlertNotifier.notify(
       context,
@@ -46,10 +48,11 @@ class _AllProductsState extends State<AllProducts> {
       titleFontSize: 28,
       title: "      ${selection['name'].toString().toUpperCase()}",
       titleColor: Colors.green,
-      description: "Price: ¥ ${selection['price']}   "
-                  " \nAmount: ${selection['amount']}  "
-                  "\nState: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
-                  "\nPercentage: ${selection['percent']}%",
+      description:  "   Price: ¥ ${selection['price']}   "
+                  "\n   Amount: ${selection['amount']}  "
+                  "\n   State: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
+                  "\n   Percentage: ${selection['percent']}%                     "
+                "\n\n   You had : ${prefs.getString(selection['name']+'amount') ?? '0'}",
       onClose: () {},
       featureKey: 3,
       hasButton: true,
