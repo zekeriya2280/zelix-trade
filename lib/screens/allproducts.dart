@@ -68,9 +68,9 @@ class _AllProductsState extends State<AllProducts> {
        //     amountzero = true;
        //   });
        // }
-        await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']);
-        setState(() {
-        });
+        await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
+              (value) => setState(() {Navigator.of(context, rootNavigator: true).pop();})
+               );
       }
     );
   });
@@ -86,7 +86,7 @@ class _AllProductsState extends State<AllProducts> {
       child: SizedBox(
         height: 150,
         child: Card(
-          color: selection['amount']=='0' ? Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
+          color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
           child: ListTile(
             leading: SizedBox(
               height: 150,

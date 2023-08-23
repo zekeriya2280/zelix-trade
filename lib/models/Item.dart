@@ -24,9 +24,11 @@ class Item{
       percent: subname['percent'],
     );
   }
-   factory Item.fromJsonAllDEC(Map<String, dynamic> json,String subname,String subcatname){
+   factory Item.fromJsonAllDEC(Map<String, dynamic> json,String subname,String subcatname){ //BUYING FROM ALLPRODUCTS
     if(json[subname]['name'] == subcatname){
       if(int.parse(json[subname]['amount']) > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) - 1).toString();}
+      json[subname]['percent'] = (double.parse(json[subname]['percent']) + 0.5).toString();
+      json[subname]['incdec'] = 'inc';
       return Item(
         name: json[subname]['name'],
         price: json[subname]['price'],
@@ -66,7 +68,18 @@ class Item{
       );
     }
   }
-  factory Item.fromJsonMY(Map<String, dynamic> json,String subname,String amount){
+  factory Item.fromJsonMY(Map<String, dynamic> json,String subname,String amount,String subcatname,String percent){ //BUYING FROM ALLPRODUCTS
+  if(json[subname]['name'] == subcatname){
+    //json[subname]['percent'] = (double.parse(json[subname]['percent']) + 0.5).toString();
+    json[subname]['incdec'] = 'inc';
+    return Item(
+      name: json[subname]['name'],
+      price: json[subname]['price'],
+      amount: amount,
+      incdec: json[subname]['incdec'],
+      percent: percent,
+    );
+  }else{
     return Item(
       name: json[subname]['name'],
       price: json[subname]['price'],
@@ -74,6 +87,10 @@ class Item{
       incdec: json[subname]['incdec'],
       percent: json[subname]['percent'],
     );
+
+  }
+    
+    
   }
   Map<String,dynamic> toJson(){
     Map<String,dynamic> data = <String, dynamic>{};

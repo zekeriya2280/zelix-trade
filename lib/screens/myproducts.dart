@@ -45,7 +45,7 @@ class _MyProductsState extends State<MyProducts> {
 
   void productDetails(int index, Map<String, dynamic> selection)async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_)  {
       FeatureAlertNotifier.notify(context,
           image: Container(
               margin: const EdgeInsets.only(top: 0),
@@ -73,10 +73,12 @@ class _MyProductsState extends State<MyProducts> {
           backgroundColor: Colors.white70, 
           buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
           onTapButton: selection['amount'] == '0' ? null :() async {
-            await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']);
-            setState(() {});
+            await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
+              (value) => setState(() {Navigator.of(context, rootNavigator: true).pop();})
+               );
           });
-    });
+          
+      });
   }
 
   Future<void> categoryGetter(String list) async {
@@ -115,7 +117,7 @@ class _MyProductsState extends State<MyProducts> {
       child: SizedBox(
         height: 150,
         child: Card(
-            color: selection['amount']=='0' ? Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
+            color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
