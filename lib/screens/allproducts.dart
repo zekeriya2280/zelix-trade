@@ -59,7 +59,9 @@ class _AllProductsState extends State<AllProducts> {
       hasButton: true,
       buttonText: 'BUY',
       buttonTextFontSize: 27,
-      backgroundColor: Colors.white70,
+      descriptionColor: Colors.white,
+      descriptionFontSize: 20,
+      backgroundColor: Colors.white38,
       onTapButton: ()async{
        // if(selection['amount'] == '0'){
        //   setState(() {

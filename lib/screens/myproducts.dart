@@ -60,9 +60,13 @@ class _MyProductsState extends State<MyProducts> {
           hasButton: true,
           buttonText: 'SELL',
           buttonTextFontSize: 27,
-          backgroundColor: Colors.white70, onTapButton: () async {
-        setState(() {});
-      });
+          descriptionColor: Colors.white,
+          descriptionFontSize: 20,
+          backgroundColor: Colors.white38, 
+          onTapButton: () async {
+            await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']);
+            setState(() {});
+          });
     });
   }
 
