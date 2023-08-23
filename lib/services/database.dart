@@ -1,11 +1,8 @@
-import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/models/Item.dart';
-import 'package:zelix_trade/models/amounts.dart';
 import 'package:zelix_trade/models/categories.dart';
 
 class DatabaseService{
@@ -80,7 +77,7 @@ class DatabaseService{
 ////////////////////////////////////////////////////////////// ALLPRODUCTS TO MYPRODUCTS ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString(subcatname+'amount', (int.parse(prefs.getString(subcatname+'amount') ?? '0')+1).toString());
+      await prefs.setString('${subcatname}amount', (int.parse(prefs.getString('${subcatname}amount') ?? '0')+1).toString());
       //prefs.clear();
       DocumentSnapshot<Map<String, dynamic>> temp = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
       List<Categories> cats = [];
@@ -88,8 +85,9 @@ class DatabaseService{
       List<Map<String,dynamic>> maps = [];
       final data = temp.data()![categoryname];
       if(data == null){// CATEGORYNAME NOT EXISTS
-      print('dddddd');
+      //print('dddddd');
         await addNewTopTabToME(categoryname,subcatname,name,price,'1',incdec,percent); //NEW CATEGORY ADDED WITH CATEGORYNAME ABOVE
+        prefs.setString('${subcatname}amount', '1');
       }
       
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
@@ -99,19 +97,20 @@ class DatabaseService{
       for (var i = 0; i < cats.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         maps.add({cats[i].submap : items[i].toJson()});
       }
-      for (var i = 0; i < data.length; i++) {//IF THERE IS A SUBCATEGORY SAME, ONLY AMOUNT INCREASE, IF NOT ADDS NEW SUBCATEGORY TO MAPS
+      //for (var i = 0; i < data.length; i++) {//IF THERE IS A SUBCATEGORY SAME, ONLY AMOUNT INCREASE, IF NOT ADDS NEW SUBCATEGORY TO MAPS
           if(List<Map<String,dynamic>>.from(data).every((itemmap)=>itemmap.keys.first != subcatname)){
+            //print('itemmap.keys.first : '+ data[data.length-1].keys.first.toString() + ' subcatname : ' + subcatname);
               maps.add({subcatname : {'name' :name,'price':price,'amount':'1','incdec':incdec,'percent':percent}});
-              prefs.setString(subcatname+'amount', '1');
+              prefs.setString('${subcatname}amount', '1');
           } 
           else{
             for (var map in maps) {
               if(map.keys.first == subcatname){
-                maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':prefs.getString(subcatname+'amount') ?? '1','incdec':incdec,'percent':percent}};
+                maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':prefs.getString('${subcatname}amount') ?? '1','incdec':incdec,'percent':percent}};
               }
             }
           }
-      }
+      //}
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({categoryname:maps}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
   }
   //////////////////////////////////////////////////////////////SHOWING IN THE ALL LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

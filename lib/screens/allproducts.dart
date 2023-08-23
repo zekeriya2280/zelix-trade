@@ -334,7 +334,7 @@ class _AllProductsState extends State<AllProducts> {
                                       tols.length
                                       : currenttoptab == 'kitchen' ?
                                       kitchens.length
-                                      : vegis.length
+                                      : 1
                                       )
                   )
                   ),
