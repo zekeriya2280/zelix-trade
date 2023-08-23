@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/database.dart';
@@ -42,28 +43,36 @@ class _MyProductsState extends State<MyProducts> {
     });
   }
 
-  void productDetails(int index, Map<String, dynamic> selection) {
-    //SharedPreferences prefs = await SharedPreferences.getInstance();
+  void productDetails(int index, Map<String, dynamic> selection)async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FeatureAlertNotifier.notify(context,
           image: Container(
               margin: const EdgeInsets.only(top: 0),
-              child: Image(
-                  image: AssetImage('assets/images/${selection['name']}.png'))),
+              child: Center(
+                child: Image(
+                  height: 120,
+                    image: AssetImage('assets/images/${selection['name']}.png')),
+              )),
           titleFontSize: 28,
           title: "      ${selection['name'].toString().toUpperCase()}",
           titleColor: Colors.green,
           description:
-              "Price: ¥ ${selection['price']}    \nAmount: ${selection['amount']}  \nState: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} \nPercentage: ${selection['percent']}%",
+             "       Price: ¥ ${selection['price']}   "
+           "\n       Amount: ${selection['amount']}  "
+           "\n       State: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
+           "\n       Percentage: ${selection['percent']}% "
+         "\n\n       You had : ${prefs.getString(selection['name']+'amount') ?? '0'}",
           onClose: () {},
           featureKey: 3,
           hasButton: true,
           buttonText: 'SELL',
           buttonTextFontSize: 27,
-          descriptionColor: Colors.white,
+          descriptionColor: Colors.green.shade900,
           descriptionFontSize: 20,
-          backgroundColor: Colors.white38, 
-          onTapButton: () async {
+          backgroundColor: Colors.white70, 
+          buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
+          onTapButton: selection['amount'] == '0' ? null :() async {
             await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']);
             setState(() {});
           });
@@ -106,7 +115,7 @@ class _MyProductsState extends State<MyProducts> {
       child: SizedBox(
         height: 150,
         child: Card(
-            color: const Color.fromARGB(255, 38, 184, 43),
+            color: selection['amount']=='0' ? Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
@@ -177,11 +186,7 @@ class _MyProductsState extends State<MyProducts> {
                                           child: Image(
                                               height: 30,
                                               width: 100,
-                                              image: AssetImage(selection[
-                                                          'incdec'] ==
-                                                      'inc'
-                                                  ? 'assets/images/inc.png'
-                                                  : 'assets/images/dec.png'))),
+                                              image: AssetImage(selection['amount']=='0' ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
                                       const SizedBox(
                                         height: 20,
                                       ),

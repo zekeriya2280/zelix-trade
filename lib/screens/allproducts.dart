@@ -61,7 +61,7 @@ class _AllProductsState extends State<AllProducts> {
       buttonTextFontSize: 27,
       descriptionColor: Colors.white,
       descriptionFontSize: 20,
-      backgroundColor: Colors.white38,
+      backgroundColor: Colors.white54,
       onTapButton: ()async{
        // if(selection['amount'] == '0'){
        //   setState(() {

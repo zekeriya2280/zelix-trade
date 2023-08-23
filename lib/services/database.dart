@@ -157,7 +157,7 @@ class DatabaseService{
       ///////////////////////////////////////////////ALLPRODUCTS TO MAPSPRO//////////////////////////////////////////////
       for (var i = 0; i < products.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         catspro.add(Categories.fromJson(products[i].keys.first));
-        itemspro.add(Item.fromJsonAllINC(products[i],products[i].keys.first,subcatname));//INCREASE AMOUNT BY 1
+        itemspro.add(Item.fromJsonAllINC(products[i],products[i].keys.first,subcatname,int.parse(prefs.getString('${subcatname}amount') ?? '0')));//INCREASE AMOUNT BY 1
       }
       for (var i = 0; i < catspro.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         mapsPro.add({catspro[i].submap : itemspro[i].toJson()});

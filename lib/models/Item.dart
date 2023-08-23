@@ -45,9 +45,9 @@ class Item{
       );
     }
   }
-  factory Item.fromJsonAllINC(Map<String, dynamic> json,String subname,String subcatname){
+  factory Item.fromJsonAllINC(Map<String, dynamic> json,String subname,String subcatname,int subcatnameamountpref){
     if(json[subname]['name'] == subcatname){
-      if(int.parse(json[subname]['amount']) > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) + 1).toString();}
+      if(subcatnameamountpref > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) + 1).toString();}
       return Item(
         name: json[subname]['name'],
         price: json[subname]['price'],
