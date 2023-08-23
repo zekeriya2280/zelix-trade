@@ -77,19 +77,34 @@ class DatabaseService{
 ////////////////////////////////////////////////////////////// ALLPRODUCTS TO MYPRODUCTS ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('${subcatname}amount', (int.parse(prefs.getString('${subcatname}amount') ?? '0')+1).toString());
+      
       //prefs.clear();
-      DocumentSnapshot<Map<String, dynamic>> temp = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
+      print(categoryname);
+      DocumentSnapshot<Map<String, dynamic>> users = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
+      DocumentSnapshot<Map<String, dynamic>> productions = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
       List<Categories> cats = [];
       List<Item> items = [];
+      List<Categories> catspro = [];
+      List<Item> itemspro = [];
       List<Map<String,dynamic>> maps = [];
-      final data = temp.data()![categoryname];
+      List<Map<String,dynamic>> mapsPro = [];
+      final data = users.data()![categoryname];
+      final products = productions.data()![categoryname];
       if(data == null){// CATEGORYNAME NOT EXISTS
       //print('dddddd');
         await addNewTopTabToME(categoryname,subcatname,name,price,'1',incdec,percent); //NEW CATEGORY ADDED WITH CATEGORYNAME ABOVE
         prefs.setString('${subcatname}amount', '1');
       }
-      
+      ///////////////////////////////////////////////ALLPRODUCTS TO MAPSPRO//////////////////////////////////////////////
+      for (var i = 0; i < products.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
+        catspro.add(Categories.fromJson(products[i].keys.first));
+        itemspro.add(Item.fromJsonAll(products[i],products[i].keys.first,subcatname));
+      }
+      for (var i = 0; i < catspro.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
+        mapsPro.add({catspro[i].submap : itemspro[i].toJson()});
+      }
+      print(mapsPro);
+      ///////////////////////////////////////////////MYPRODUCTS TO MAPS//////////////////////////////////////////////
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         cats.add(Categories.fromJson(data[i].keys.first));
         items.add(Item.fromJsonMY(data[i],data[i].keys.first,prefs.getString(data[i].keys.first+'amount') ?? '1'));
@@ -97,21 +112,28 @@ class DatabaseService{
       for (var i = 0; i < cats.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         maps.add({cats[i].submap : items[i].toJson()});
       }
-      //for (var i = 0; i < data.length; i++) {//IF THERE IS A SUBCATEGORY SAME, ONLY AMOUNT INCREASE, IF NOT ADDS NEW SUBCATEGORY TO MAPS
-          if(List<Map<String,dynamic>>.from(data).every((itemmap)=>itemmap.keys.first != subcatname)){
+      await prefs.setString('${subcatname}amount', (int.parse(prefs.getString('${subcatname}amount') ?? '0')+1).toString());
+      
+      if(mapsPro.any((map) => int.parse(Item.fromJsonAmountZero(map.values.first).amount) < 1  && Item.fromJsonAmountZero(map.values.first).name == subcatname)){
+         await prefs.setString('${subcatname}amount', (int.parse(prefs.getString('${subcatname}amount') ?? '0')-1).toString());
+      }
+      else{
+        if(List<Map<String,dynamic>>.from(data).every((itemmap)=>itemmap.keys.first != subcatname)){
             //print('itemmap.keys.first : '+ data[data.length-1].keys.first.toString() + ' subcatname : ' + subcatname);
               maps.add({subcatname : {'name' :name,'price':price,'amount':'1','incdec':incdec,'percent':percent}});
               prefs.setString('${subcatname}amount', '1');
           } 
           else{
-            for (var map in maps) {
-              if(map.keys.first == subcatname){
-                maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':prefs.getString('${subcatname}amount') ?? '1','incdec':incdec,'percent':percent}};
-              }
-            }
+                for (var map in maps) {
+                  if(map.keys.first == subcatname){
+                    maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':prefs.getString('${subcatname}amount') ?? '1','incdec':incdec,'percent':percent}};
+                  }
+                }
           }
-      //}
+       
+      }
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({categoryname:maps}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
+      await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:mapsPro}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
   }
   //////////////////////////////////////////////////////////////SHOWING IN THE ALL LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Future<List<Map<String, dynamic>>> getFromFirebaseCategories(String categoryname)async{

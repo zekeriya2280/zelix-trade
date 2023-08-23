@@ -19,6 +19,7 @@ class _AllProductsState extends State<AllProducts> {
   double height = 0;
   double width = 0;
   int proditemcount = 0;
+  //bool amountzero = false;
   bool breaker = true;
   String currenttoptab = 'vegetables';
   List<Map<String,dynamic>> vegslist = [];
@@ -60,7 +61,11 @@ class _AllProductsState extends State<AllProducts> {
       buttonTextFontSize: 27,
       backgroundColor: Colors.white70,
       onTapButton: ()async{
-        
+       // if(selection['amount'] == '0'){
+       //   setState(() {
+       //     amountzero = true;
+       //   });
+       // }
         await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']);
         setState(() {
         });
@@ -79,7 +84,7 @@ class _AllProductsState extends State<AllProducts> {
       child: SizedBox(
         height: 150,
         child: Card(
-          color: const Color.fromARGB(255, 38, 184, 43),
+          color: selection['amount']=='0' ? Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
           child: ListTile(
             leading: SizedBox(
               height: 150,
@@ -122,7 +127,7 @@ class _AllProductsState extends State<AllProducts> {
                                 scrollDirection: Axis.vertical,
                                 children: [
                                   const SizedBox(height:30,child: Text('')),
-                                  Center(child: Image(height: 30,width:100,image: AssetImage(selection['incdec'] == 'inc' ? 'assets/images/inc.png' : 'assets/images/dec.png'))),
+                                  Center(child: Image(height: 30,width:100,image: AssetImage(selection['amount']=='0'? 'assets/images/stabil.png' : selection['incdec'] == 'inc' ? 'assets/images/inc.png' : 'assets/images/dec.png'))),
                                   const SizedBox(height: 20,),
                                   Center(child: Text('${selection['percent']}%',style: const TextStyle(color: Colors.white,fontSize: 14,fontWeight: FontWeight.bold)))],
                               ),
