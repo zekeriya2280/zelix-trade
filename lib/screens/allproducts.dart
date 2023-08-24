@@ -19,7 +19,7 @@ class _AllProductsState extends State<AllProducts> {
   double height = 0;
   double width = 0;
   int proditemcount = 0;
-  //bool amountzero = false;
+  String textprice = '';
   bool breaker = true;
   String currenttoptab = 'vegetables';
   List<Map<String,dynamic>> vegslist = [];
@@ -33,12 +33,23 @@ class _AllProductsState extends State<AllProducts> {
   List<String> dropdownitems = ['vegetables','fruits','tools','kitchen'];
   CollectionReference<Map<String, dynamic>> products= FirebaseFirestore.instance.collection('productions');
   
+  @override
+  void initState() {
+    textpricefinder();
+    super.initState();
+  }
   void resetDetails(int index,Map<String, dynamic> selection){
     setState(() {
         FeatureNotifier.persistAll();
         productDetails(index,selection);
     });
 
+  }
+  void textpricefinder()async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      textprice = prefs.getString('textprice') ?? '1500';
+    });
   }
   void productDetails(int index,Map<String, dynamic> selection)async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -54,7 +65,9 @@ class _AllProductsState extends State<AllProducts> {
                   "\n   State: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
                   "\n   Percentage: ${selection['percent']}%                     "
                 "\n\n   You had : ${prefs.getString(selection['name']+'amount') ?? '0'}",
-      onClose: () {},
+      onClose: () {setState(() {
+        
+      });},
       featureKey: 3,
       hasButton: true,
       buttonText: 'BUY',
@@ -64,7 +77,9 @@ class _AllProductsState extends State<AllProducts> {
       backgroundColor: Colors.white54,
       onTapButton: ()async{
         await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() {Navigator.of(context, rootNavigator: true).pop();})
+              (value) => setState(() {Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts()));
+                //Navigator.of(context, rootNavigator: true).pop();
+                })
                );
         setState(() {
           
@@ -289,7 +304,7 @@ class _AllProductsState extends State<AllProducts> {
                           )
                       ),
                       SizedBox(
-                        width: 150,
+                        width: 60,
                         height: 50,
                         child: ElevatedButton(
                           style: const ButtonStyle(
@@ -302,8 +317,15 @@ class _AllProductsState extends State<AllProducts> {
                               
                             });
                           }, 
-                          child: const Center(child: Text('Add new catagory',style: TextStyle(color: Colors.red,fontSize: 13),),),
+                          child: const Center(child: Text('A',style: TextStyle(color: Colors.red,fontSize: 13),),),
                           )
+                      ),
+                       SizedBox(
+                        width: 110,
+                        height: 50,
+                        child: Center(child: Text(
+                          textprice+" \$",style: TextStyle(color: Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                        ),)
                       )
                     ],
                   ),

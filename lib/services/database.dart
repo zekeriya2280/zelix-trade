@@ -74,7 +74,7 @@ class DatabaseService{
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:maps});
   }
 ////////////////////////////////////////////////////////////// ALLPRODUCTS TO MYPRODUCTS ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{
+  Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{//     BUYING
       SharedPreferences prefs = await SharedPreferences.getInstance();
       //prefs.clear();
       DocumentSnapshot<Map<String, dynamic>> users = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
@@ -101,15 +101,18 @@ class DatabaseService{
       for (var i = 0; i < catspro.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         mapsPro.add({catspro[i].submap : itemspro[i].toJson()});
       }
-      //print(mapsPro);
+      print(mapsPro);
+      await prefs.setString('${subcatname}price', ((double.parse(price) + ((1000 * double.parse(percent)) / 100)).floor()).toString());
+      print(prefs.getString('${subcatname}price'));
       ///////////////////////////////////////////////MYPRODUCTS TO MAPS//////////////////////////////////////////////
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         cats.add(Categories.fromJson(data[i].keys.first));
-        items.add(Item(amount: prefs.getString('${subcatname}amount') ?? '1',percent: percent,incdec: incdec,name: subcatname,price: price).fromJsonMY(data[i],data[i].keys.first,prefs.getString(data[i].keys.first+'amount') ?? '1',subcatname,prefs.getString(data[i].keys.first+'percent') ?? '0.5',prefs));//INCREASE AMOUNT BY 1
+        items.add(Item(amount: prefs.getString('${subcatname}amount') ?? '1',percent: percent,incdec: incdec,name: subcatname,price: price).fromJsonMY(data[i],data[i].keys.first,prefs.getString(data[i].keys.first+'amount') ?? '1',subcatname,prefs.getString('${subcatname}price') ?? '1000', prefs.getString(data[i].keys.first+'percent') ?? '0.5', prefs));//INCREASE AMOUNT BY 1
       }
       for (var i = 0; i < cats.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         maps.add({cats[i].submap : items[i].toJson()});
       }
+       print(maps);
       await prefs.setString('${subcatname}amount', (int.parse(prefs.getString('${subcatname}amount') ?? '0')+1).toString());//WHEN BOUGHT FROM ALLPRODUCTS TO MYPRODUCTS THE AMOUNT OF MYPRODUCTS ITEM AMOUNT INCREASE BY 1 
       //await prefs.setString('${subcatname}percent', (double.parse(prefs.getString('${subcatname}percent') ?? '0')+0.5).toString());//WHEN BOUGHT FROM ALLPRODUCTS TO MYPRODUCTS THE PERCENT OF MYPRODUCTS ITEM AMOUNT INCREASE BY 0.5
 
@@ -126,17 +129,19 @@ class DatabaseService{
           else{//IF ITEM ALREADY EXIST IN MYPRODUCTS
                 for (var map in maps) {
                   if(map.keys.first == subcatname){
-                    maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':prefs.getString('${subcatname}amount') ?? '1','incdec':incdec,'percent':prefs.getString('${subcatname}percent') ?? '0.5'}};
+                    maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':prefs.getString('${subcatname}price') ?? '1000','amount':prefs.getString('${subcatname}amount') ?? '1','incdec':prefs.getString('${subcatname}incdec') ?? 'dec','percent':prefs.getString('${subcatname}percent') ?? '0.5'}};
                   }
                 }
           }
        
       }
+      await prefs.setString('textprice', '10000');
+      await prefs.setString('textprice', (int.parse(prefs.getString('textprice') ?? '1500') - int.parse(prefs.getString('${subcatname}price') ?? '1000')).toString());
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({categoryname:maps}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:mapsPro}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
   }
   ////////////////////////////////////////////////////////////// ALLPRODUCTS TO MYPRODUCTS ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future<void> sellItemGivenCatagoryToAllProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{
+  Future<void> sellItemGivenCatagoryToAllProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{//  SELLING
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       DocumentSnapshot<Map<String, dynamic>> users = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
@@ -164,7 +169,7 @@ class DatabaseService{
       ///////////////////////////////////////////////MYPRODUCTS TO MAPS//////////////////////////////////////////////
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         cats.add(Categories.fromJson(data[i].keys.first));
-        items.add(Item(amount: prefs.getString('${subcatname}amount') ?? '1',percent: percent,incdec: incdec,name: subcatname,price: price).fromJsonMY(data[i],data[i].keys.first,prefs.getString(data[i].keys.first+'amount') ?? '1',subcatname,prefs.getString(data[i].keys.first+'percent') ?? '0.5',prefs));
+        items.add(Item(amount: prefs.getString('${subcatname}amount') ?? '1',percent: percent,incdec: incdec,name: subcatname,price: price).fromJsonMY(data[i],data[i].keys.first,prefs.getString(data[i].keys.first+'amount') ?? '1',subcatname,prefs.getString('${subcatname}price') ?? '1000',prefs.getString(data[i].keys.first+'percent') ?? '0.5',prefs));
       }
       for (var i = 0; i < cats.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         maps.add({cats[i].submap : items[i].toJson()});
@@ -182,7 +187,7 @@ class DatabaseService{
           else{//same item exist and decrease amount of that item by 1 
                 for (var map in maps) {
                   if(map.keys.first == subcatname){
-                    maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':price,'amount':prefs.getString('${subcatname}amount') ?? '1','incdec':incdec,'percent':prefs.getString('${subcatname}percent') ?? '0.5'}};
+                    maps[maps.indexOf(map)] = {subcatname : {'name' :name,'price':prefs.getString('${subcatname}price') ?? '1000','amount':prefs.getString('${subcatname}amount') ?? '1','incdec':prefs.getString('${subcatname}incdec') ?? 'inc','percent':prefs.getString('${subcatname}percent') ?? '0.5'}};
                   }
                 }
           }

@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Item extends StatelessWidget{
+class Item{
   String name = "";
   String price = "";
   String amount = "";
@@ -28,23 +26,25 @@ class Item extends StatelessWidget{
       percent: subname['percent'],
     );
   }
-  void percentMover(Map<String, dynamic> json,String subname,String subcatname)async{
+  void percentMover(Map<String, dynamic> json,String percent,String price,String incdec,String subcatname)async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('${subcatname}percent', json[subname]['percent']);
-    await prefs.setString('${subcatname}incdec', 'inc');
+    await prefs.setString('${subcatname}percent', percent);
+    await prefs.setString('${subcatname}incdec', incdec);
+    await prefs.setString('${subcatname}price', price);
   }
   Item fromJsonAllDEC(Map<String, dynamic> json,String subname,String subcatname){ //BUYING FROM ALLPRODUCTS
     if(json[subname]['name'] == subcatname){
       if(int.parse(json[subname]['amount']) > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) - 1).toString();}
-      json[subname]['percent'] = (double.parse(json[subname]['percent']) + 0.5).toString();
-      json[subname]['incdec'] = 'inc';
-      percentMover(json,subname,subcatname);
+      String percent = (double.parse(json[subname]['percent']) + 0.5).toString();
+      String price = ((double.parse(json[subname]['price']) + ((1000 * double.parse(json[subname]['percent'])) / 100)).floor()).toString();
+      String incdec = 'inc';
+      percentMover(json,percent,price,incdec,subcatname);
       return Item(
         name: json[subname]['name'],
-        price: json[subname]['price'],
+        price: price,
         amount: json[subname]['amount'],
-        incdec: json[subname]['incdec'],
-        percent: json[subname]['percent'],
+        incdec: incdec,
+        percent: percent,
       );
     }
     else{
@@ -61,11 +61,13 @@ class Item extends StatelessWidget{
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('${subcatname}percent', json[subname]['percent']);
     await prefs.setString('${subcatname}incdec', 'dec');
+    await prefs.setString('${subcatname}price', json[subname]['price']);
   }
   Item fromJsonAllINC(Map<String, dynamic> json,String subname,String subcatname,int subcatnameamountpref){ //SELLING TO ALLPRODUCTS
     if(json[subname]['name'] == subcatname){
       if(subcatnameamountpref > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) + 1).toString();}
       if(double.parse(json[subname]['percent']) > 0){json[subname]['percent'] = (double.parse(json[subname]['percent']) - 0.5).toString();}
+      json[subname]['price'] = ( (double.parse(json[subname]['price']) - ((1000 * double.parse(json[subname]['percent'])) / 100)).floor()).toString();
       json[subname]['incdec'] = 'dec';
       percentMoverincALL(json, subname, subcatname);
       return Item(
@@ -86,13 +88,14 @@ class Item extends StatelessWidget{
       );
     }
   }
-  Item fromJsonMY(Map<String, dynamic> json,String subname,String amount,String subcatname,String percent,SharedPreferences prefs){ //BUYING FROM ALLPRODUCTS
+  Item fromJsonMY(Map<String, dynamic> json,String subname,String amount,String subcatname,String price,String percent,SharedPreferences prefs){ //BUYING FROM ALLPRODUCTS
   //SharedPreferences prefs = await SharedPreferences.getInstance(); 
   var id = prefs.getString('${subcatname}incdec') ?? 'inc';
+  //var price = prefs.getString('${subcatname}price') ?? '1000';
   if(json[subname]['name'] == subcatname){
     return Item(
             name: json[subname]['name'],
-            price: json[subname]['price'],
+            price: price,
             amount: amount,
             incdec: id,
             percent: percent,
@@ -121,9 +124,9 @@ class Item extends StatelessWidget{
     return data;
   }
   
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    throw Placeholder();
-  }
+ //@override
+ //Widget build(BuildContext context) {
+ //  // TODO: implement build
+ //  throw Placeholder();
+ //}
 }
