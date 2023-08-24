@@ -19,6 +19,7 @@ class _MyProductsState extends State<MyProducts> {
   double width = 0;
   bool breaker = true;
   int proditemcount = 0;
+  String textprice = '';
   List<String> prodnames = [];
   List<String> frus = [];
   List<String> vegis = [];
@@ -34,7 +35,14 @@ class _MyProductsState extends State<MyProducts> {
       FirebaseFirestore.instance.collection('users');
   @override
   void initState() {
+    textpricefinder();
     super.initState();
+  }
+  void textpricefinder()async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      textprice = prefs.getString('textprice') ?? '5000';
+    });
   }
   void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
@@ -72,13 +80,13 @@ class _MyProductsState extends State<MyProducts> {
           descriptionFontSize: 20,
           backgroundColor: Colors.white70, 
           buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
-          onTapButton: selection['amount'] == '0' ? null :() async {
+          onTapButton: selection['amount'] == '0'? null : ()async{
             await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() {Navigator.of(context, rootNavigator: true).pop();})
+              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyProducts())); })
                );
-          });
-          
-      });
+              setState(() { });
+        });
+    });
   }
 
   Future<void> categoryGetter(String list) async {
@@ -335,45 +343,68 @@ class _MyProductsState extends State<MyProducts> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
-                  SizedBox(
-                      height: 50,
-                      width: width / 2,
-                      child: DropdownMenu<String>(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      SizedBox(
+                          height: 50,
                           width: width / 2,
-                          inputDecorationTheme: InputDecorationTheme(
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.only(left: 25),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(50))),
-                          textStyle: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 18,
-                              letterSpacing: 2),
-                          menuStyle: const MenuStyle(
-                            surfaceTintColor:
-                                MaterialStatePropertyAll(Colors.amber),
-                            shape: MaterialStatePropertyAll(
-                                RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10)))),
-                            side: MaterialStatePropertyAll(BorderSide(
-                                color: Color.fromARGB(255, 121, 99, 99))),
-                            backgroundColor: MaterialStatePropertyAll(
-                                Color.fromARGB(255, 255, 255, 255)),
+                          child: DropdownMenu<String>(
+                              width: width / 2,
+                              inputDecorationTheme: InputDecorationTheme(
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.only(left: 25),
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(50))),
+                              textStyle: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  letterSpacing: 2),
+                              menuStyle: const MenuStyle(
+                                surfaceTintColor:
+                                    MaterialStatePropertyAll(Colors.amber),
+                                shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.all(Radius.circular(10)))),
+                                side: MaterialStatePropertyAll(BorderSide(
+                                    color: Color.fromARGB(255, 121, 99, 99))),
+                                backgroundColor: MaterialStatePropertyAll(
+                                    Color.fromARGB(255, 255, 255, 255)),
+                              ),
+                              onSelected: (v) {
+                                setState(() {
+                                  currenttoptab = v!;
+                                });
+                              },
+                              initialSelection: 'vegetables',
+                              dropdownMenuEntries: dropdownitems
+                                  .map((e) => DropdownMenuEntry<String>(
+                                        value: e,
+                                        label: e,
+                                      ))
+                                  .toList())),
+                            SizedBox(
+                        //width: 110,
+                        height: 50,
+                        child: Center(child: Container(
+                          height: 50,
+                          width: width/3,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            
+                            borderRadius: BorderRadius.circular(50)
                           ),
-                          onSelected: (v) {
-                            setState(() {
-                              currenttoptab = v!;
-                            });
-                          },
-                          initialSelection: 'vegetables',
-                          dropdownMenuEntries: dropdownitems
-                              .map((e) => DropdownMenuEntry<String>(
-                                    value: e,
-                                    label: e,
-                                  ))
-                              .toList())),
+                          child: Center(
+                            child: Text(
+                              "$textprice \$",style: TextStyle(color: int.parse(textprice) <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                            ),
+                          ),
+                        ),)
+                      )
+                    ],
+                  ),
                   const SizedBox(height: 20),
                   SizedBox(
                       height: height / 1.2,

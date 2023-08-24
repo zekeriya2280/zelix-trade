@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:flutter/material.dart';
@@ -48,11 +47,14 @@ class _AllProductsState extends State<AllProducts> {
   void textpricefinder()async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      textprice = prefs.getString('textprice') ?? '1500';
+      textprice = prefs.getString('textprice') ?? '5000';
     });
   }
   void productDetails(int index,Map<String, dynamic> selection)async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    //prefs.clear();
+    //await prefs.setString('textprice', '5000');
+    print(int.parse(prefs.getString('${selection['name']}price') ?? '1000'));
     WidgetsBinding.instance.addPostFrameCallback((_) {
     FeatureAlertNotifier.notify(
       context,
@@ -75,15 +77,15 @@ class _AllProductsState extends State<AllProducts> {
       descriptionColor: Colors.white,
       descriptionFontSize: 20,
       backgroundColor: Colors.white54,
-      onTapButton: ()async{
-        await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() {Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts()));
-                //Navigator.of(context, rootNavigator: true).pop();
-                })
+      buttonBackgroundColor: selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? Colors.grey : Colors.green,
+      onTapButton:selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? null : ()async{
+        
+        if(int.parse(prefs.getString('textprice') ?? '5000') > int.parse(prefs.getString('${selection['name']}price') ?? '1000')){
+              await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
+              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts())); })
                );
-        setState(() {
-          
-        });
+              setState(() { });
+        }
       }
     );
   });
@@ -321,10 +323,21 @@ class _AllProductsState extends State<AllProducts> {
                           )
                       ),
                        SizedBox(
-                        width: 110,
+                        //width: 110,
                         height: 50,
-                        child: Center(child: Text(
-                          textprice+" \$",style: TextStyle(color: Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                        child: Center(child: Container(
+                          height: 50,
+                          width: width/3,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            
+                            borderRadius: BorderRadius.circular(50)
+                          ),
+                          child: Center(
+                            child: Text(
+                              "$textprice \$",style: TextStyle(color: int.parse(textprice) <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                            ),
+                          ),
                         ),)
                       )
                     ],

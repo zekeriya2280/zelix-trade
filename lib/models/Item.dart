@@ -36,7 +36,7 @@ class Item{
     if(json[subname]['name'] == subcatname){
       if(int.parse(json[subname]['amount']) > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) - 1).toString();}
       String percent = (double.parse(json[subname]['percent']) + 0.5).toString();
-      String price = ((double.parse(json[subname]['price']) + ((1000 * double.parse(json[subname]['percent'])) / 100)).floor()).toString();
+      String price = ((double.parse(json[subname]['price']) + ((double.parse(json[subname]['price']) * double.parse(json[subname]['percent']))/100)).floor()).toString();
       String incdec = 'inc';
       percentMover(json,percent,price,incdec,subcatname);
       return Item(
@@ -66,16 +66,17 @@ class Item{
   Item fromJsonAllINC(Map<String, dynamic> json,String subname,String subcatname,int subcatnameamountpref){ //SELLING TO ALLPRODUCTS
     if(json[subname]['name'] == subcatname){
       if(subcatnameamountpref > 0){json[subname]['amount'] = (int.parse(json[subname]['amount']) + 1).toString();}
-      if(double.parse(json[subname]['percent']) > 0){json[subname]['percent'] = (double.parse(json[subname]['percent']) - 0.5).toString();}
-      json[subname]['price'] = ( (double.parse(json[subname]['price']) - ((1000 * double.parse(json[subname]['percent'])) / 100)).floor()).toString();
-      json[subname]['incdec'] = 'dec';
+      String percent = '0.0';
+      if(double.parse(json[subname]['percent']) > 0.0) { percent = (double.parse(json[subname]['percent']) - 0.5).toString();}
+      String price = ((double.parse(json[subname]['price']) - ((double.parse(json[subname]['price']) * double.parse(json[subname]['percent']))/100)).floor()).toString();
+      String incdec = 'dec';
       percentMoverincALL(json, subname, subcatname);
       return Item(
         name: json[subname]['name'],
-        price: json[subname]['price'],
+        price: price,
         amount: json[subname]['amount'],
-        incdec: json[subname]['incdec'],
-        percent: json[subname]['percent'],
+        incdec: incdec,
+        percent: percent,
       );
     }
     else{

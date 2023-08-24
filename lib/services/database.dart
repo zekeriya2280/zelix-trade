@@ -76,7 +76,7 @@ class DatabaseService{
 ////////////////////////////////////////////////////////////// ALLPRODUCTS TO MYPRODUCTS ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> addNewItemGivenCatagoryToMyProducts(String categoryname,String subcatname,String name,String price,String incdec,String percent)async{//     BUYING
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      //prefs.clear();
+      
       DocumentSnapshot<Map<String, dynamic>> users = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
       DocumentSnapshot<Map<String, dynamic>> productions = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
       List<Categories> cats = [];
@@ -101,9 +101,10 @@ class DatabaseService{
       for (var i = 0; i < catspro.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         mapsPro.add({catspro[i].submap : itemspro[i].toJson()});
       }
-      print(mapsPro);
-      await prefs.setString('${subcatname}price', ((double.parse(price) + ((1000 * double.parse(percent)) / 100)).floor()).toString());
-      print(prefs.getString('${subcatname}price'));
+      //print(mapsPro);
+      await prefs.setString('textprice', (int.parse(prefs.getString('textprice') ?? '5000') - int.parse(prefs.getString('${subcatname}price') ?? '1000')).toString());
+      await prefs.setString('${subcatname}price', ((double.parse(price) + ((double.parse(price) * double.parse(percent)) ) ).floor()).toString());
+      //print(prefs.getString('${subcatname}price'));
       ///////////////////////////////////////////////MYPRODUCTS TO MAPS//////////////////////////////////////////////
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         cats.add(Categories.fromJson(data[i].keys.first));
@@ -112,7 +113,8 @@ class DatabaseService{
       for (var i = 0; i < cats.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         maps.add({cats[i].submap : items[i].toJson()});
       }
-       print(maps);
+      // print(maps);
+      
       await prefs.setString('${subcatname}amount', (int.parse(prefs.getString('${subcatname}amount') ?? '0')+1).toString());//WHEN BOUGHT FROM ALLPRODUCTS TO MYPRODUCTS THE AMOUNT OF MYPRODUCTS ITEM AMOUNT INCREASE BY 1 
       //await prefs.setString('${subcatname}percent', (double.parse(prefs.getString('${subcatname}percent') ?? '0')+0.5).toString());//WHEN BOUGHT FROM ALLPRODUCTS TO MYPRODUCTS THE PERCENT OF MYPRODUCTS ITEM AMOUNT INCREASE BY 0.5
 
@@ -133,10 +135,8 @@ class DatabaseService{
                   }
                 }
           }
-       
       }
-      await prefs.setString('textprice', '10000');
-      await prefs.setString('textprice', (int.parse(prefs.getString('textprice') ?? '1500') - int.parse(prefs.getString('${subcatname}price') ?? '1000')).toString());
+      //prefs.clear();
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({categoryname:maps}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:mapsPro}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
   }
@@ -155,9 +155,6 @@ class DatabaseService{
       final data = users.data()![categoryname];
       final products = productions.data()![categoryname];
       ///////////////////////////////////////////////ALLPRODUCTS TO MAPSPRO//////////////////////////////////////////////
-     // if(percent == '0.0'){//IF PERCENT IS 0
-     //   await prefs.setString('${subcatname}percent','0.0');
-     // }
       for (var i = 0; i < products.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         catspro.add(Categories.fromJson(products[i].keys.first));
         itemspro.add(Item(amount: prefs.getString('${subcatname}amount') ?? '1',percent: percent,incdec: incdec,name: subcatname,price: price).fromJsonAllINC(products[i],products[i].keys.first,subcatname,int.parse(prefs.getString('${subcatname}amount') ?? '0')));//INCREASE AMOUNT BY 1
@@ -165,7 +162,8 @@ class DatabaseService{
       for (var i = 0; i < catspro.length; i++) {//GET TOGETHER ALL ITEMS TO MAPS.
         mapsPro.add({catspro[i].submap : itemspro[i].toJson()});
       }
-      //print(mapsPro);
+      await prefs.setString('textprice', (int.parse(prefs.getString('textprice') ?? '5000') + int.parse(prefs.getString('${subcatname}price') ?? '1000')).toString());
+      await prefs.setString('${subcatname}price', ((double.parse(price) - ((double.parse(price) * double.parse(percent))/100)).floor()).toString());
       ///////////////////////////////////////////////MYPRODUCTS TO MAPS//////////////////////////////////////////////
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         cats.add(Categories.fromJson(data[i].keys.first));
