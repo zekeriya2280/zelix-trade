@@ -63,14 +63,12 @@ class _AllProductsState extends State<AllProducts> {
       descriptionFontSize: 20,
       backgroundColor: Colors.white54,
       onTapButton: ()async{
-       // if(selection['amount'] == '0'){
-       //   setState(() {
-       //     amountzero = true;
-       //   });
-       // }
         await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
               (value) => setState(() {Navigator.of(context, rootNavigator: true).pop();})
                );
+        setState(() {
+          
+        });
       }
     );
   });
