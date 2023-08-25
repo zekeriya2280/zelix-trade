@@ -42,7 +42,6 @@ class _IntroPageState extends State<IntroPage> {
                   ));
         }
             return Scaffold(
-              //backgroundColor: Color.fromARGB(255, 90, 71, 15),
               appBar: AppBar(
                 backgroundColor: const Color.fromARGB(134, 255, 191, 0),
                 title: Row(
@@ -107,7 +106,6 @@ class _IntroPageState extends State<IntroPage> {
                                    await DatabaseService().setNickname(nickname);
                                    Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
                                  }
-                       
                       },
                       style: ButtonStyle(
                         shadowColor: MaterialStateProperty.all<Color>(Colors.white38),

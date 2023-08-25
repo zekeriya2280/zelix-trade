@@ -3,13 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class DatabaseService{
    DatabaseService();
-
+   String nickname = '';
   final CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore.instance.collection('users');
   final CollectionReference<Map<String, dynamic>> productionsCollection = FirebaseFirestore.instance.collection('productions');
-  
+  final CollectionReference<Map<String, dynamic>> traderoomsCollection = FirebaseFirestore.instance.collection('traderooms');
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> setUserData(String name,String email,String password)async{
-    
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).set({
         'name':name,
         'email':email,
@@ -19,7 +18,6 @@ class DatabaseService{
   }
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> setNickname(String nickname)async{
-    
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
         'nickname':nickname,
       });
@@ -160,7 +158,7 @@ class DatabaseService{
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:mapsPro}); //ALL ITEMS BEFORE AND NEW ADDED TO MAPS AND UPDATE USERS CATEGORY
   }
   //////////////////////////////////////////////////////////////SHOWING IN THE ALL LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    Future<List<Map<String, dynamic>>> getFromFirebaseCategories(String categoryname)async{
+    Future<List<Map<String, dynamic>>> getFromFirebaseCategories(String categoryname)async{//ALLPRODUCTS LISTVIEW
       DocumentSnapshot<Map<String, dynamic>> products = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
       List<Map<String,dynamic>> maps = [];
       final pros = products.data()![categoryname];
@@ -170,7 +168,7 @@ class DatabaseService{
       return maps;
   }
 //////////////////////////////////////////////////////////////SHOWING IN THE MY LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future<List<Map<String, dynamic>>> getFromFirebaseCategoriesOfMY(String categoryname)async{
+    Future<List<Map<String, dynamic>>> getFromFirebaseCategoriesOfMY(String categoryname)async{//MYPRODUCTS LISTVIEW
       DocumentSnapshot<Map<String, dynamic>> temp = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
       List<Map<String,dynamic>> maps = [];
       final data = temp.data()![categoryname];
@@ -179,6 +177,32 @@ class DatabaseService{
           maps.add({data[i].keys.first : data[i].values.first});
       }
       return maps;
-  }
+    }
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<String> createTrade()async{
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+      nickname = value.data()!['nickname'].toString()
+      );
+      return await traderoomsCollection.add({'tradesman1': nickname,'tradesman2':''}).then((value) => value.id);
+    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<void> clearLastRoom()async{
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+      nickname = value.data()!['nickname'].toString()
+      );
+      await traderoomsCollection.get().then((element) {
+          for (var doc in element.docs) {
+            if(doc.data()['tradesman1'] == nickname){
+              doc.reference.delete();
+            }
+          }
+      });
+    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<void> joinTradeAreaWithID(String traderoomid)async{
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+          nickname = value.data()!['nickname'].toString()
+      );
+      await traderoomsCollection.doc(traderoomid).update({'tradesman2': nickname});
+    }
 }

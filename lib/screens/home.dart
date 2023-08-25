@@ -8,6 +8,7 @@ import 'package:zelix_trade/screens/createTrade.dart';
 import 'package:zelix_trade/screens/joinTrade.dart';
 import 'package:zelix_trade/screens/options.dart';
 import 'package:zelix_trade/services/authservice.dart';
+import 'package:zelix_trade/services/database.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -84,8 +85,10 @@ class _HomeState extends State<Home> {
                     style: const ButtonStyle(
                       backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
                     ),
-                    onPressed: (){
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CreateTrade()));
+                    onPressed: ()async{
+                      String traderoomid = '';
+                      traderoomid = await DatabaseService().createTrade();
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  CreateTrade(traderoomid:traderoomid)));
                     }, 
                     child: const Text('Create Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),
               const SizedBox(height: 30,),
