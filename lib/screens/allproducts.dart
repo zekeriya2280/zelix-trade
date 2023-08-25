@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/screens/home.dart';
@@ -19,6 +20,7 @@ class _AllProductsState extends State<AllProducts> {
   double width = 0;
   int proditemcount = 0;
   String textprice = '';
+  String youhade = '';
   bool breaker = true;
   String currenttoptab = 'vegetables';
   List<Map<String,dynamic>> vegslist = [];
@@ -31,10 +33,11 @@ class _AllProductsState extends State<AllProducts> {
   List<String> kitchens = [];
   List<String> dropdownitems = ['vegetables','fruits','tools','kitchen'];
   CollectionReference<Map<String, dynamic>> products= FirebaseFirestore.instance.collection('productions');
+  CollectionReference<Map<String, dynamic>> users= FirebaseFirestore.instance.collection('users');
   
   @override
   void initState() {
-    textpricefinder();
+    //textpricefinder();
     super.initState();
   }
   void resetDetails(int index,Map<String, dynamic> selection){
@@ -44,32 +47,29 @@ class _AllProductsState extends State<AllProducts> {
     });
 
   }
-  void textpricefinder()async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      textprice = prefs.getString('textprice') ?? '5000';
-    });
-  }
+// void textpricefinder()async{
+//   SharedPreferences prefs = await SharedPreferences.getInstance();
+//   setState(() {
+//     textprice = prefs.getString('textprice') ?? '5000';
+//   });
+// }
   void productDetails(int index,Map<String, dynamic> selection)async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //prefs.clear();
     //await prefs.setString('textprice', '5000');
-    print(int.parse(prefs.getString('${selection['name']}price') ?? '1000'));
+    //print(int.parse(prefs.getString('${selection['name']}price') ?? '1000'));
     WidgetsBinding.instance.addPostFrameCallback((_) {
     FeatureAlertNotifier.notify(
       context,
       image: Container(margin: const EdgeInsets.only(top: 0),child: Image(image: AssetImage('assets/images/${selection['name']}.png'))),
       titleFontSize: 28,
       title: "      ${selection['name'].toString().toUpperCase()}",
-      titleColor: Colors.green,
+      titleColor: Colors.white,
       description:  "   Price: ¥ ${selection['price']}   "
                   "\n   Amount: ${selection['amount']}  "
                   "\n   State: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
-                  "\n   Percentage: ${selection['percent']}%                     "
-                "\n\n   You had : ${prefs.getString(selection['name']+'amount') ?? '0'}",
-      onClose: () {setState(() {
-        
-      });},
+                  "\n   Percentage: ${selection['percent']}%                     ",
+      onClose: () {setState(() {});},
       featureKey: 3,
       hasButton: true,
       buttonText: 'BUY',
@@ -186,6 +186,8 @@ class _AllProductsState extends State<AllProducts> {
       });
     }
   }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
@@ -233,156 +235,167 @@ class _AllProductsState extends State<AllProducts> {
                  }
             }
           }
-        return Scaffold(
-          appBar: AppBar(
-          actions: [
-            Padding(padding: const EdgeInsets.only(left:10),
-            child: IconButton(
-              icon: const Icon(Icons.home,color: Colors.white,size: 25,),
-              onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Home()));}, 
-            )),
-            Padding(padding: const EdgeInsets.only(left:10),
-            child: IconButton(
-              icon: const Icon(Icons.remove_red_eye,color: Colors.white,size: 25,),
-              onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyProducts()));}, 
-            )),
-            Padding(padding: const EdgeInsets.all(15),
-              child: Center(child: 
-                           GestureDetector(
-                               onTap: ()async{},
-                               child: const Icon(Icons.logout,color: Colors.red,)),),),
-          ],
-          backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(700),
-          title: const Center(
-              child: Text(
-            'Zelix Trade',
-            style: TextStyle(
-                color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-          )),
-        ),
-          body: SingleChildScrollView(
-            
-            child: Container(
-              height: height,
-              decoration: BoxDecoration(
-                color: Colors.yellow[200],
-              ),
-              child: Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Row(
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: users.snapshots(),
+          builder: (context, userssnapshot) {
+            if(!userssnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
+            for (var element in userssnapshot.data!.docs) {
+              if(element.id == FirebaseAuth.instance.currentUser!.uid){
+                textprice = element.data()['totalmoney'].toString();
+              }
+            }
+            return Scaffold(
+              appBar: AppBar(
+              actions: [
+                Padding(padding: const EdgeInsets.only(left:10),
+                child: IconButton(
+                  icon: const Icon(Icons.home,color: Colors.white,size: 25,),
+                  onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Home()));}, 
+                )),
+                Padding(padding: const EdgeInsets.only(left:10),
+                child: IconButton(
+                  icon: const Icon(Icons.remove_red_eye,color: Colors.white,size: 25,),
+                  onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyProducts()));}, 
+                )),
+                Padding(padding: const EdgeInsets.all(15),
+                  child: Center(child: 
+                               GestureDetector(
+                                   onTap: ()async{},
+                                   child: const Icon(Icons.logout,color: Colors.red,)),),),
+              ],
+              backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(700),
+              title: const Center(
+                  child: Text(
+                'Zelix Trade',
+                style: TextStyle(
+                    color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+              )),
+            ),
+              body: SingleChildScrollView(
+                
+                child: Container(
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: Colors.yellow[200],
+                  ),
+                  child: Center(
+                  child: Column(
                     children: [
-                      SizedBox(
-                        height: 50,
-                        width: width/2,
-                        child: DropdownMenu<String>(
-                          width: width/2,
-                          inputDecorationTheme: InputDecorationTheme(
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.only(left:25),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(50))),
-                          textStyle: const TextStyle(color: Colors.black, fontSize: 18,letterSpacing: 2),
-                          menuStyle: const MenuStyle(
-                            surfaceTintColor: MaterialStatePropertyAll(Colors.amber),
-                            shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(10))
-                            )),
-                            side: MaterialStatePropertyAll(BorderSide(color: Color.fromARGB(255, 121, 99, 99))),
-                            backgroundColor: MaterialStatePropertyAll(Color.fromARGB(255, 255, 255, 255)),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          SizedBox(
+                            height: 50,
+                            width: width/2,
+                            child: DropdownMenu<String>(
+                              width: width/2,
+                              inputDecorationTheme: InputDecorationTheme(
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.only(left:25),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(50))),
+                              textStyle: const TextStyle(color: Colors.black, fontSize: 18,letterSpacing: 2),
+                              menuStyle: const MenuStyle(
+                                surfaceTintColor: MaterialStatePropertyAll(Colors.amber),
+                                shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10))
+                                )),
+                                side: MaterialStatePropertyAll(BorderSide(color: Color.fromARGB(255, 121, 99, 99))),
+                                backgroundColor: MaterialStatePropertyAll(Color.fromARGB(255, 255, 255, 255)),
+                              ),
+                              onSelected:(v){
+                                setState(() {
+                                  currenttoptab = v!;
+                                });
+                              }, 
+                              initialSelection: 'vegetables',
+                              dropdownMenuEntries: dropdownitems.map((e) => DropdownMenuEntry<String>(
+                                value: e,
+                                label: e,
+                              )
+                              ).toList()
+                              )
                           ),
-                          onSelected:(v){
-                            setState(() {
-                              currenttoptab = v!;
-                            });
-                          }, 
-                          initialSelection: 'vegetables',
-                          dropdownMenuEntries: dropdownitems.map((e) => DropdownMenuEntry<String>(
-                            value: e,
-                            label: e,
+                          SizedBox(
+                            width: 60,
+                            height: 50,
+                            child: ElevatedButton(
+                              style: const ButtonStyle(
+                                backgroundColor: MaterialStatePropertyAll(Colors.white)
+                              ),
+                              onPressed: ()async{
+                                //DatabaseService().addNewTopTab('kitchen','plastic', 'plastic', '2800', '150', 'dec', '12');
+                                await DatabaseService().addNewItemGivenCatagoryToAllProducts('kitchen','spoon', 'spoon', '1800', '150', 'dec', '20');
+                                setState(() {
+                                  
+                                });
+                              }, 
+                              child: const Center(child: Text('A',style: TextStyle(color: Colors.red,fontSize: 13),),),
+                              )
+                          ),
+                           SizedBox(
+                            //width: 110,
+                            height: 50,
+                            child: Center(child: Container(
+                              height: 50,
+                              width: width/3,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                
+                                borderRadius: BorderRadius.circular(50)
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "$textprice \$",style: TextStyle(color: int.parse(textprice) <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                                ),
+                              ),
+                            ),)
                           )
-                          ).toList()
-                          )
+                        ],
                       ),
+                      const SizedBox(height: 20),
                       SizedBox(
-                        width: 60,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: const ButtonStyle(
-                            backgroundColor: MaterialStatePropertyAll(Colors.white)
-                          ),
-                          onPressed: ()async{
-                            //DatabaseService().addNewTopTab('kitchen','plastic', 'plastic', '2800', '150', 'dec', '12');
-                            await DatabaseService().addNewItemGivenCatagoryToAllProducts('kitchen','spoon', 'spoon', '1800', '150', 'dec', '20');
-                            setState(() {
-                              
-                            });
-                          }, 
-                          child: const Center(child: Text('A',style: TextStyle(color: Colors.red,fontSize: 13),),),
-                          )
-                      ),
-                       SizedBox(
-                        //width: 110,
-                        height: 50,
-                        child: Center(child: Container(
-                          height: 50,
-                          width: width/3,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            
-                            borderRadius: BorderRadius.circular(50)
-                          ),
-                          child: Center(
-                            child: Text(
-                              "$textprice \$",style: TextStyle(color: int.parse(textprice) <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
-                            ),
-                          ),
-                        ),)
+                        height:height/1.2,
+                        width: width,
+                        child: Center(
+                          child: ListView.separated(
+                            itemBuilder: (context, index) => 
+                                    currenttoptab == 'vegetables' ? 
+                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                    buildProductItems(index,vegslist[index]) 
+                                    : currenttoptab == 'fruits' ? 
+                                    frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                    buildProductItems(index,frutslist[index])
+                                    : currenttoptab == 'tools' ? 
+                                    toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                    buildProductItems(index, toolslist[index])
+                                    : currenttoptab == 'kitchen' ?
+                                    kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                    buildProductItems(index, kitchenslist[index])
+                                    :
+                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                    buildProductItems(index,vegslist[index]) 
+                                    , 
+                            separatorBuilder: (context, index) => const Divider(color: Colors.white,thickness: 2), 
+                            itemCount: currenttoptab == 'vegetables' ? 
+                                          vegis.length 
+                                          :  currenttoptab == 'fruits' ?
+                                          frus.length
+                                          :  currenttoptab == 'tools' ?
+                                          tols.length
+                                          : currenttoptab == 'kitchen' ?
+                                          kitchens.length
+                                          : 1
+                                          )
                       )
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height:height/1.2,
-                    width: width,
-                    child: Center(
-                      child: ListView.separated(
-                        itemBuilder: (context, index) => 
-                                currenttoptab == 'vegetables' ? 
-                                vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                buildProductItems(index,vegslist[index]) 
-                                : currenttoptab == 'fruits' ? 
-                                frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                buildProductItems(index,frutslist[index])
-                                : currenttoptab == 'tools' ? 
-                                toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                buildProductItems(index, toolslist[index])
-                                : currenttoptab == 'kitchen' ?
-                                kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                buildProductItems(index, kitchenslist[index])
-                                :
-                                vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                buildProductItems(index,vegslist[index]) 
-                                , 
-                        separatorBuilder: (context, index) => const Divider(color: Colors.white,thickness: 2), 
-                        itemCount: currenttoptab == 'vegetables' ? 
-                                      vegis.length 
-                                      :  currenttoptab == 'fruits' ?
-                                      frus.length
-                                      :  currenttoptab == 'tools' ?
-                                      tols.length
-                                      : currenttoptab == 'kitchen' ?
-                                      kitchens.length
-                                      : 1
-                                      )
-                  )
-                  ),
-                ],
+                          ),
+                )
               ),
-                      ),
-            )
-          ),
+            );
+          }
         );
       }
     );

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/database.dart';
@@ -35,15 +34,15 @@ class _MyProductsState extends State<MyProducts> {
       FirebaseFirestore.instance.collection('users');
   @override
   void initState() {
-    textpricefinder();
+    //textpricefinder();
     super.initState();
   }
-  void textpricefinder()async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      textprice = prefs.getString('textprice') ?? '5000';
-    });
-  }
+  //void textpricefinder()async{
+  //  SharedPreferences prefs = await SharedPreferences.getInstance();
+  //  setState(() {
+  //    textprice = prefs.getString('textprice') ?? '5000';
+  //  });
+  //}
   void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
       FeatureNotifier.persistAll();
@@ -52,7 +51,7 @@ class _MyProductsState extends State<MyProducts> {
   }
 
   void productDetails(int index, Map<String, dynamic> selection)async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //SharedPreferences prefs = await SharedPreferences.getInstance();
     WidgetsBinding.instance.addPostFrameCallback((_)  {
       FeatureAlertNotifier.notify(context,
           image: Container(
@@ -64,21 +63,20 @@ class _MyProductsState extends State<MyProducts> {
               )),
           titleFontSize: 28,
           title: "      ${selection['name'].toString().toUpperCase()}",
-          titleColor: Colors.green,
+          titleColor: Colors.white,
           description:
              "       Price: ¥ ${selection['price']}   "
            "\n       Amount: ${selection['amount']}  "
            "\n       State: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
-           "\n       Percentage: ${selection['percent']}% "
-         "\n\n       You had : ${prefs.getString(selection['name']+'amount') ?? '0'}",
+           "\n       Percentage: ${selection['percent']}% ",
           onClose: () {},
           featureKey: 3,
           hasButton: true,
           buttonText: 'SELL',
           buttonTextFontSize: 27,
-          descriptionColor: Colors.green.shade900,
+          descriptionColor: Colors.white,
           descriptionFontSize: 20,
-          backgroundColor: Colors.white70, 
+          backgroundColor: Colors.white54, 
           buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
           onTapButton: selection['amount'] == '0'? null : ()async{
             await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
@@ -277,6 +275,11 @@ class _MyProductsState extends State<MyProducts> {
                  }
               }
             }
+          }
+          for (var element in snapshot.data!.docs) {
+              if(element.id == FirebaseAuth.instance.currentUser!.uid){
+                textprice = element.data()['totalmoney'].toString();
+              }
           }
           return Scaffold(
             appBar: AppBar(
