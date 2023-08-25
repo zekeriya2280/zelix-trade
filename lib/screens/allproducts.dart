@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/screens/myproducts.dart';
 import 'package:zelix_trade/services/database.dart';
@@ -37,7 +36,6 @@ class _AllProductsState extends State<AllProducts> {
   
   @override
   void initState() {
-    //textpricefinder();
     super.initState();
   }
   void resetDetails(int index,Map<String, dynamic> selection){
@@ -47,17 +45,7 @@ class _AllProductsState extends State<AllProducts> {
     });
 
   }
-// void textpricefinder()async{
-//   SharedPreferences prefs = await SharedPreferences.getInstance();
-//   setState(() {
-//     textprice = prefs.getString('textprice') ?? '5000';
-//   });
-// }
   void productDetails(int index,Map<String, dynamic> selection)async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    //prefs.clear();
-    //await prefs.setString('textprice', '5000');
-    //print(int.parse(prefs.getString('${selection['name']}price') ?? '1000'));
     WidgetsBinding.instance.addPostFrameCallback((_) {
     FeatureAlertNotifier.notify(
       context,
@@ -79,8 +67,7 @@ class _AllProductsState extends State<AllProducts> {
       backgroundColor: Colors.white54,
       buttonBackgroundColor: selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? Colors.grey : Colors.green,
       onTapButton:selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? null : ()async{
-        
-        if(int.parse(prefs.getString('textprice') ?? '5000') > int.parse(prefs.getString('${selection['name']}price') ?? '1000')){
+        if(int.parse(textprice) > int.parse(selection['price'])){
               await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
               (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts())); })
                );
@@ -91,9 +78,7 @@ class _AllProductsState extends State<AllProducts> {
   });
   }
   buildProductItems(int index,Map<String, dynamic> taboption){
-    
     Map<String,dynamic> selection = taboption[taboption.keys.first];
-    //print(taboption);
     return GestureDetector(
       onTap: ()=>setState(() {
          resetDetails(index,selection);

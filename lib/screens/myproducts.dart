@@ -34,15 +34,8 @@ class _MyProductsState extends State<MyProducts> {
       FirebaseFirestore.instance.collection('users');
   @override
   void initState() {
-    //textpricefinder();
     super.initState();
   }
-  //void textpricefinder()async{
-  //  SharedPreferences prefs = await SharedPreferences.getInstance();
-  //  setState(() {
-  //    textprice = prefs.getString('textprice') ?? '5000';
-  //  });
-  //}
   void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
       FeatureNotifier.persistAll();
@@ -51,7 +44,6 @@ class _MyProductsState extends State<MyProducts> {
   }
 
   void productDetails(int index, Map<String, dynamic> selection)async {
-    //SharedPreferences prefs = await SharedPreferences.getInstance();
     WidgetsBinding.instance.addPostFrameCallback((_)  {
       FeatureAlertNotifier.notify(context,
           image: Container(

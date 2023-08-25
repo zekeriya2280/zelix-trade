@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:zelix_trade/models/Item.dart';
-import 'package:zelix_trade/models/categories.dart';
 
 class DatabaseService{
    DatabaseService();
@@ -56,19 +54,11 @@ class DatabaseService{
   }
   ////////////////////////////////////////////////////////// ADD NEW ITEM TO ALL PRODUCTS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> addNewItemGivenCatagoryToAllProducts(String categoryname,String subcatname,String name,String price,String amount,String incdec,String percent)async{
-      DocumentSnapshot<Map<String, dynamic>> temp = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
-      List<Categories> cats = [];
-      List<Item> items = [];
+      DocumentSnapshot<Map<String, dynamic>> products = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
       List<Map<String,dynamic>> maps = [];
-      final data = temp.data()![categoryname];
-     
-      for (var i = 0; i < data.length; i++) {
-        //print(data[i]);
-        cats.add(Categories.fromJson(data[i].keys.first));
-        items.add(Item.fromJson(data[i],data[i].keys.first));
-      }
-      for (var i = 0; i < cats.length; i++) {
-        maps.add({cats[i].submap : items[i].toJson()});
+      final pros = products.data()![categoryname];
+      for (var i = 0; i < pros.length; i++) {
+        maps.add({pros[i].keys.first : pros[i].values.first});
       }
       maps.add({subcatname : {'name' :name,'price':price,'amount':amount,'incdec':incdec,'percent':percent}});
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({categoryname:maps});
@@ -87,10 +77,10 @@ class DatabaseService{
       ///////////////////////////////////////////////ALLPRODUCTS TO MAPSPRO//////////////////////////////////////////////
       for (var i = 0; i < products.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         if(products[i].keys.first == subcatname){
-          await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'totalmoney': (int.parse(users.data()!['totalmoney']) - (int.parse(products[i].values.first['price']))).toString()});
-          products[i].values.first['price']=  ((double.parse(products[i].values.first['price']) + ((double.parse(products[i].values.first['price']) * double.parse(products[i].values.first['percent']))/100)).floor()).toString();
-          products[i].values.first['amount'] = (int.parse(products[i].values.first['amount']) - 1).toString();
-          products[i].values.first['percent'] = (double.parse(products[i].values.first['percent']) + 0.5).toString();
+          await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'totalmoney': (int.parse(users.data()!['totalmoney'].toString()) - (int.parse(products[i].values.first['price'].toString()))).toString()});
+          products[i].values.first['price']=  ((double.parse(products[i].values.first['price'].toString()) + ((double.parse(products[i].values.first['price'].toString()) * double.parse(products[i].values.first['percent'].toString()))/100)).floor()).toString();
+          products[i].values.first['amount'] = (int.parse(products[i].values.first['amount'].toString()) - 1).toString();
+          products[i].values.first['percent'] = (double.parse(products[i].values.first['percent'].toString()) + 0.5).toString();
           products[i].values.first['incdec'] = 'inc';
           mapsPro.add({products[i].keys.first : products[i].values.first});
         }
@@ -99,14 +89,11 @@ class DatabaseService{
         }
       }
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
-        if(data[i].keys.first == subcatname){
+        //if(data[i].keys.first == subcatname){
           maps.add({data[i].keys.first : data[i].values.first});
-        }
-        else{
-          maps.add({data[i].keys.first : data[i].values.first});
-        }
+        //}
       }
-      if(mapsPro.any((map) => int.parse(Map<String,dynamic>.from(map.values.first)['amount']) < 1  && Map<String,dynamic>.from(map.values.first)['name'] == subcatname)){//ALLPROCTS ITEM THAT TRYING TO BUY IS LESS THAN 1 MYPRODUCTS ITEM                                //INCREASE AMOUNT OF MYPRODUCTS ITEM CANCELED BY DECREASING AMOUNT
+      if(mapsPro.any((map) => int.parse(Map<String,dynamic>.from(map.values.first)['amount'].toString()) < 1  && Map<String,dynamic>.from(map.values.first)['name'] == subcatname)){//ALLPROCTS ITEM THAT TRYING TO BUY IS LESS THAN 1 MYPRODUCTS ITEM                                //INCREASE AMOUNT OF MYPRODUCTS ITEM CANCELED BY DECREASING AMOUNT
       }                                                                                                                                                          //BY 1.
       else{//IF ITEM STILL EXISTS IN ALLPROCTS, ADDING amount TO MYPRODUCTS item by 1
         if(List<Map<String,dynamic>>.from(data).every((itemmap)=>itemmap.keys.first != subcatname)){//ONLY NAME MATCHED WITH MYPRODUCTS AMOUNT WILL BE INCREASED
@@ -118,7 +105,7 @@ class DatabaseService{
                     maps[maps.indexOf(map)] = {subcatname : 
                                                   {'name' :name,
                                                    'price':((double.parse(price) + ((double.parse(price) * double.parse(percent))/100)).floor()).toString(),
-                                                   'amount':(int.parse(maps[maps.indexOf(map)].values.first['amount']) + 1).toString(),
+                                                   'amount':(int.parse(maps[maps.indexOf(map)].values.first['amount'].toString()) + 1).toString(),
                                                    'incdec':'inc',
                                                    'percent':(double.parse(percent)+0.5).toString()}};
                   }
@@ -136,16 +123,13 @@ class DatabaseService{
       List<Map<String,dynamic>> mapsPro = [];
       final data = users.data()![categoryname];
       final products = productions.data()![categoryname];
-      //if(data == null){// CATEGORYNAME NOT EXISTS
-      //  await addNewTopTabToME(categoryname,subcatname,name,price,'1',incdec,percent); //NEW CATEGORY ADDED WITH CATEGORYNAME ABOVE TO MYPRODUCTS
-      //}
       ///////////////////////////////////////////////ALLPRODUCTS TO MAPSPRO//////////////////////////////////////////////
       for (var i = 0; i < products.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
         if(products[i].keys.first == subcatname){
-          await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'totalmoney': (int.parse(users.data()!['totalmoney']) + (int.parse(products[i].values.first['price']))).toString()});
-          products[i].values.first['price']=  ((double.parse(products[i].values.first['price']) - ((double.parse(products[i].values.first['price']) * double.parse(products[i].values.first['percent']))/100)).floor()).toString();
-          products[i].values.first['amount'] = (int.parse(products[i].values.first['amount']) + 1).toString();
-          products[i].values.first['percent'] = (double.parse(products[i].values.first['percent']) - 0.5).toString();
+          await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({'totalmoney': (int.parse(users.data()!['totalmoney'].toString()) + (int.parse(products[i].values.first['price'].toString()))).toString()});
+          products[i].values.first['price']=  ((double.parse(products[i].values.first['price'].toString()) - ((double.parse(products[i].values.first['price'].toString()) * double.parse(products[i].values.first['percent'].toString()))/100)).floor()).toString();
+          products[i].values.first['amount'] = (int.parse(products[i].values.first['amount'].toString()) + 1).toString();
+          products[i].values.first['percent'] = (double.parse(products[i].values.first['percent'].toString()) - 0.5).toString();
           products[i].values.first['incdec'] = 'dec';
           mapsPro.add({products[i].keys.first : products[i].values.first});
         }
@@ -154,14 +138,11 @@ class DatabaseService{
         }
       }
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
-        if(data[i].keys.first == subcatname){
+        //if(data[i].keys.first == subcatname){
           maps.add({data[i].keys.first : data[i].values.first});
-        }
-        else{
-          maps.add({data[i].keys.first : data[i].values.first});
-        }
+       // }
       }
-      if(maps.any((map) => int.parse(Map<String,dynamic>.from(map.values.first)['amount']) < 1  && Map<String,dynamic>.from(map.values.first)['name'] == subcatname)){//ALLPROCTS ITEM THAT TRYING TO BUY IS LESS THAN 1 MYPRODUCTS ITEM                                //INCREASE AMOUNT OF MYPRODUCTS ITEM CANCELED BY DECREASING AMOUNT
+      if(maps.any((map) => int.parse(Map<String,dynamic>.from(map.values.first)['amount'].toString()) < 1  && Map<String,dynamic>.from(map.values.first)['name'] == subcatname)){//ALLPROCTS ITEM THAT TRYING TO BUY IS LESS THAN 1 MYPRODUCTS ITEM                                //INCREASE AMOUNT OF MYPRODUCTS ITEM CANCELED BY DECREASING AMOUNT
       }                                                                                                                                                          //BY 1.
       else{//IF ITEM STILL EXISTS IN ALLPROCTS, ADDING amount TO MYPRODUCTS item by 1
        for (var map in maps) {
@@ -169,7 +150,7 @@ class DatabaseService{
                     maps[maps.indexOf(map)] = {subcatname : 
                                                   {'name' :name,
                                                    'price':((double.parse(price) - ((double.parse(price) * double.parse(percent))/100)).floor()).toString(),
-                                                   'amount':(int.parse(maps[maps.indexOf(map)].values.first['amount']) - 1).toString(),
+                                                   'amount':(int.parse(maps[maps.indexOf(map)].values.first['amount'].toString()) - 1).toString(),
                                                    'incdec':'dec',
                                                    'percent':(double.parse(percent)-0.5).toString()}};
                   }
@@ -180,41 +161,22 @@ class DatabaseService{
   }
   //////////////////////////////////////////////////////////////SHOWING IN THE ALL LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Future<List<Map<String, dynamic>>> getFromFirebaseCategories(String categoryname)async{
-      DocumentSnapshot<Map<String, dynamic>> temp = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
-      List<Categories> cats = [];
-      List<Item> items = [];
+      DocumentSnapshot<Map<String, dynamic>> products = await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').get();
       List<Map<String,dynamic>> maps = [];
-      final data = temp.data()![categoryname];
-      for (var i = 0; i < data.length; i++) {
-        cats.add(Categories.fromJson(data[i].keys.first.toString()));
-        items.add(Item.fromJson(data[i],data[i].keys.first.toString()));
-      }
-      for (var i = 0; i < cats.length; i++) {
-        maps.add({cats[i].submap : items[i].toJson()});
+      final pros = products.data()![categoryname];
+      for (var i = 0; i < pros.length; i++) {
+        maps.add({pros[i].keys.first : pros[i].values.first});
       }
       return maps;
   }
 //////////////////////////////////////////////////////////////SHOWING IN THE MY LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<List<Map<String, dynamic>>> getFromFirebaseCategoriesOfMY(String categoryname)async{
       DocumentSnapshot<Map<String, dynamic>> temp = await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get();
-      List<Categories> cats = [];
-      List<Item> items = [];
       List<Map<String,dynamic>> maps = [];
       final data = temp.data()![categoryname];
       if(data == null){return [];}
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
-        //if(data[i].keys.first == subcatname){
-        //  data[i].values.first['amount'] = (int.parse(data[i].values.first['amount']) + 1).toString();
-        //  maps.add({data[i].keys.first : data[i].values.first});
-        //  //Map<String,dynamic>.from(products[i]).foreach((v){v.values.first['amount'] -= 1;return v;});
-        //  //mapsPro.add(products[i].map((v){v.values.first['amount'] -= 1;return v;}));
-        //}
-        //else{
           maps.add({data[i].keys.first : data[i].values.first});
-        //}
-        print(maps);
-       //catspro.add(Categories.fromJson(products[i].keys.first));
-       //itemspro.add(Item(amount: prefs.getString('${subcatname}amount') ?? '1',percent: percent,incdec: incdec,name: subcatname,price: price).fromJsonAllDEC(products[i],products[i].keys.first,subcatname));//DECREASE AMOUNT BY 1
       }
       return maps;
   }
