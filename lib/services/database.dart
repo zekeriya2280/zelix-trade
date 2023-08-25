@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -180,10 +182,12 @@ class DatabaseService{
     }
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Future<String> createTrade()async{
+      String id = (Random().nextInt(89999)+10000).toString();
       await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
       nickname = value.data()!['nickname'].toString()
       );
-      return await traderoomsCollection.add({'tradesman1': nickname,'tradesman2':''}).then((value) => value.id);
+      await traderoomsCollection.doc(id).set({'tradesman1': nickname,'tradesman2':''});
+      return id;
     }
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Future<void> clearLastRoom()async{
@@ -204,5 +208,18 @@ class DatabaseService{
           nickname = value.data()!['nickname'].toString()
       );
       await traderoomsCollection.doc(traderoomid).update({'tradesman2': nickname});
+    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<void> clearLastRoomIfIJoiner()async{
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+      nickname = value.data()!['nickname'].toString()
+      );
+      await traderoomsCollection.get().then((element) {
+          for (var doc in element.docs) {
+            if(doc.data()['tradesman2'] == nickname){
+              doc.reference.delete();
+            }
+          }
+      });
     }
 }

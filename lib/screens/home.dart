@@ -22,6 +22,14 @@ class _HomeState extends State<Home> {
   double width = 0;
   final AuthService auth = AuthService(); 
   @override
+  void initState() {
+    deleteMyTradeArea();
+    super.initState();
+  }
+  void deleteMyTradeArea()async {
+    await DatabaseService().clearLastRoomIfIJoiner();  
+  }  
+  @override
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
