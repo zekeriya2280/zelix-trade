@@ -17,6 +17,7 @@ class _TradeAreaState extends State<TradeArea> {
   double height = 0;
   double width = 0;
   bool breaker = true;
+  bool iambuilder = false;
   List<String> frus = [];
   List<String> vegis = [];
   List<String> tols = [];
@@ -28,6 +29,8 @@ class _TradeAreaState extends State<TradeArea> {
   List<String> dropdownitems = ['vegetables', 'fruits', 'tools', 'kitchen'];
   CollectionReference<Map<String, dynamic>> users =
       FirebaseFirestore.instance.collection('users');
+  CollectionReference<Map<String, dynamic>> tradeareaCollection =
+      FirebaseFirestore.instance.collection('traderooms');
   String currenttoptab = 'vegetables';
     void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
@@ -235,8 +238,8 @@ class _TradeAreaState extends State<TradeArea> {
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: users.snapshots(),
-        builder: (context, snapshot) {
-           if(!snapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
+        builder: (context, userssnapshot) {
+           if(!userssnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
            if (currenttoptab == 'vegetables') {
               categoryGetter('vegslist');
           } else if (currenttoptab == 'fruits'){
@@ -248,7 +251,7 @@ class _TradeAreaState extends State<TradeArea> {
           else if (currenttoptab == 'kitchen'){
             categoryGetter('kitchenslist');
           }
-          for (var doc in snapshot.data!.docs) {
+          for (var doc in userssnapshot.data!.docs) {
             if (FirebaseAuth.instance.currentUser!.uid == doc.id) {
               if (breaker) {
                  if (doc.data()['vegetables'] != null) {
@@ -278,101 +281,124 @@ class _TradeAreaState extends State<TradeArea> {
               }
             }
           }
-          return SingleChildScrollView(
-            child: Center(
-              child: Container(
-                height: height,
-                width: width,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                       colorFilter: ColorFilter.mode(
-                         Colors.white,
-                         BlendMode.softLight,
-                       ),
-                       image: AssetImage("assets/images/tradebg.png"),
-                       //repeat: ImageRepeat.repeat,
-                       fit: BoxFit.contain,
-                       alignment: Alignment.topCenter,
-                       opacity: 0.3
-                     ),
-                ),
-                child: Column(children: [
-                      SizedBox(
-                          height: height / 2.5,
-                          width: width,
-                          child: Center(
-                              child: ListView.separated(
-                                  itemBuilder: (context, index) =>
-                                      currenttoptab == 'vegetables' ? 
-                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,vegslist[index]) 
-                                    : currenttoptab == 'fruits' ? 
-                                    frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,frutslist[index])
-                                    : currenttoptab == 'tools' ? 
-                                    toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index, toolslist[index])
-                                    : currenttoptab == 'kitchen' ?
-                                    kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index, kitchenslist[index])
-                                    :
-                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,vegslist[index]) 
-                                    , 
-                                  separatorBuilder: (context, index) =>
-                                      const Divider(),
-                                  itemCount: currenttoptab == 'vegetables' ? 
-                                          vegis.length
-                                          :  currenttoptab == 'fruits' ?
-                                          frus.length
-                                          :  currenttoptab == 'tools' ?
-                                          tols.length
-                                          : currenttoptab == 'kitchen' ?
-                                          kitchens.length
-                                          : vegis.length
-                                          )
-                                          )
-                                          ),
-                        const Divider(color: Colors.purple,height: 15,thickness: 10,indent: 10,endIndent: 10),
-                        SizedBox(
-                          height: height / 2.5,
-                          width: width,
-                          child: Center(
-                              child: ListView.separated(
-                                  itemBuilder: (context, index) =>
-                                      currenttoptab == 'vegetables' ? 
-                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,vegslist[index]) 
-                                    : currenttoptab == 'fruits' ? 
-                                    frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,frutslist[index])
-                                    : currenttoptab == 'tools' ? 
-                                    toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index, toolslist[index])
-                                    : currenttoptab == 'kitchen' ?
-                                    kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index, kitchenslist[index])
-                                    :
-                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,vegslist[index]) 
-                                    , 
-                                  separatorBuilder: (context, index) =>
-                                      const Divider(),
-                                  itemCount: currenttoptab == 'vegetables' ? 
-                                          vegis.length 
-                                          :  currenttoptab == 'fruits' ?
-                                          frus.length
-                                          :  currenttoptab == 'tools' ?
-                                          tols.length
-                                          : currenttoptab == 'kitchen' ?
-                                          kitchens.length
-                                          : vegis.length
-                                          )
-                                          )
-                                          ),
-      
-                ]),
-              )),
+          
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: tradeareaCollection.snapshots(),
+            builder: (context, tradeareasnapshot) {
+              if(!tradeareasnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
+              
+              for (var doc in tradeareasnapshot.data!.docs) {
+                for (var udoc in userssnapshot.data!.docs) {
+                  if(userssnapshot.data!.docs.any((udoc) => FirebaseAuth.instance.currentUser!.uid == udoc.id)){
+                    if(doc.data()['tradesman1'] == udoc.data()['nickname'] || doc.data()['tradesman2'] == udoc.data()['nickname']){
+                      if(doc.data()['tradesman1'] == udoc.data()['nickname']){
+                        iambuilder = true;
+                      }
+                      else if(doc.data()['tradesman2'] == udoc.data()['nickname']){
+                        iambuilder = false;
+                      }
+                    };
+                  }
+                }
+              }
+              print(iambuilder);
+              return SingleChildScrollView(
+                child: Center(
+                  child: Container(
+                    height: height,
+                    width: width,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                           colorFilter: ColorFilter.mode(
+                             Colors.white,
+                             BlendMode.softLight,
+                           ),
+                           image: AssetImage("assets/images/tradebg.png"),
+                           //repeat: ImageRepeat.repeat,
+                           fit: BoxFit.contain,
+                           alignment: Alignment.topCenter,
+                           opacity: 0.3
+                         ),
+                    ),
+                    child: Column(children: [
+                          SizedBox(
+                              height: height / 2.5,
+                              width: width,
+                              child: Center(
+                                  child: ListView.separated(
+                                      itemBuilder: (context, index) =>
+                                          currenttoptab == 'vegetables' ? 
+                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index,vegslist[index]) 
+                                        : currenttoptab == 'fruits' ? 
+                                        frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index,frutslist[index])
+                                        : currenttoptab == 'tools' ? 
+                                        toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index, toolslist[index])
+                                        : currenttoptab == 'kitchen' ?
+                                        kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index, kitchenslist[index])
+                                        :
+                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index,vegslist[index]) 
+                                        , 
+                                      separatorBuilder: (context, index) =>
+                                          const Divider(),
+                                      itemCount: currenttoptab == 'vegetables' ? 
+                                              vegis.length
+                                              :  currenttoptab == 'fruits' ?
+                                              frus.length
+                                              :  currenttoptab == 'tools' ?
+                                              tols.length
+                                              : currenttoptab == 'kitchen' ?
+                                              kitchens.length
+                                              : vegis.length
+                                              )
+                                              )
+                                              ),
+                            const Divider(color: Colors.purple,height: 15,thickness: 10,indent: 10,endIndent: 10),
+                            SizedBox(
+                              height: height / 2.5,
+                              width: width,
+                              child: Center(
+                                  child: ListView.separated(
+                                      itemBuilder: (context, index) =>
+                                          currenttoptab == 'vegetables' ? 
+                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index,vegslist[index]) 
+                                        : currenttoptab == 'fruits' ? 
+                                        frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index,frutslist[index])
+                                        : currenttoptab == 'tools' ? 
+                                        toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index, toolslist[index])
+                                        : currenttoptab == 'kitchen' ?
+                                        kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index, kitchenslist[index])
+                                        :
+                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
+                                        buildProductItems(index,vegslist[index]) 
+                                        , 
+                                      separatorBuilder: (context, index) =>
+                                          const Divider(),
+                                      itemCount: currenttoptab == 'vegetables' ? 
+                                              vegis.length 
+                                              :  currenttoptab == 'fruits' ?
+                                              frus.length
+                                              :  currenttoptab == 'tools' ?
+                                              tols.length
+                                              : currenttoptab == 'kitchen' ?
+                                              kitchens.length
+                                              : vegis.length
+                                              )
+                                              )
+                                              ),
+                
+                    ]),
+                  )),
+              );
+            }
           );
         }
       ),
