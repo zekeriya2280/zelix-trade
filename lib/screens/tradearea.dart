@@ -286,7 +286,7 @@ class _TradeAreaState extends State<TradeArea> {
             stream: tradeareaCollection.snapshots(),
             builder: (context, tradeareasnapshot) {
               if(!tradeareasnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-              
+
               for (var doc in tradeareasnapshot.data!.docs) {
                 for (var udoc in userssnapshot.data!.docs) {
                   if(userssnapshot.data!.docs.any((udoc) => FirebaseAuth.instance.currentUser!.uid == udoc.id)){
@@ -297,7 +297,7 @@ class _TradeAreaState extends State<TradeArea> {
                       else if(doc.data()['tradesman2'] == udoc.data()['nickname']){
                         iambuilder = false;
                       }
-                    };
+                    }
                   }
                 }
               }
@@ -321,6 +321,7 @@ class _TradeAreaState extends State<TradeArea> {
                          ),
                     ),
                     child: Column(children: [
+                          iambuilder ?  
                           SizedBox(
                               height: height / 2.5,
                               width: width,
@@ -356,8 +357,10 @@ class _TradeAreaState extends State<TradeArea> {
                                               : vegis.length
                                               )
                                               )
-                                              ),
+                            )
+                            : Container(),
                             const Divider(color: Colors.purple,height: 15,thickness: 10,indent: 10,endIndent: 10),
+                            iambuilder ? Container() : 
                             SizedBox(
                               height: height / 2.5,
                               width: width,
@@ -393,8 +396,8 @@ class _TradeAreaState extends State<TradeArea> {
                                               : vegis.length
                                               )
                                               )
-                                              ),
-                
+                            )
+                           // : Container()
                     ]),
                   )),
               );
