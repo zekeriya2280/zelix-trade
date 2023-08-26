@@ -21,7 +21,7 @@ class AuthService{
      User? user = result.user;
      return userFromFirebaseUser(user);
   } catch (e) {
-    print(e.toString());
+    //print(e.toString());
     return Userr();
     
   }
@@ -31,7 +31,7 @@ class AuthService{
   try {
     return await auth.signOut();
   } catch (e) {
-    print('CAN NOT SIGN OUT : $e');
+    //print('CAN NOT SIGN OUT : $e');
     return;
   }
  }
@@ -42,7 +42,7 @@ Future signInWithEmailAndPassword(String email,String password)async{
      return userFromFirebaseUser(user);
      
   } catch (e) {
-    print('can not signed in : $e');
+    //print('can not signed in : $e');
     return null;
   }
  }
@@ -50,13 +50,13 @@ Future signInWithEmailAndPassword(String email,String password)async{
   try {
     UserCredential result = await auth.createUserWithEmailAndPassword(email: email,password: password);
     User? user = result.user;
-    print(user);
+    //print(user);
      await DatabaseService().setUserData(name,email,password);
      print('B');
      return userFromFirebaseUser(user);
      
   } catch (e) {
-    print('can not signed up : $e');
+    //print('can not signed up : $e');
     return null;
   }
  }

@@ -18,6 +18,8 @@ class _TradeAreaState extends State<TradeArea> {
   double width = 0;
   bool breaker = true;
   bool iambuilder = false;
+  int allmylistLength = 0;
+  int allpartnerlistLength = 0;
   List<String> frus = [];
   List<String> vegis = [];
   List<String> tols = [];
@@ -26,6 +28,8 @@ class _TradeAreaState extends State<TradeArea> {
   List<Map<String, dynamic>> vegslist = [];
   List<Map<String, dynamic>> toolslist = [];
   List<Map<String, dynamic>> kitchenslist = [];
+  List<List<Map<String, dynamic>>> allmylist = [];
+  List<List<Map<String, dynamic>>> allpartnerlist = [];
   List<String> dropdownitems = ['vegetables', 'fruits', 'tools', 'kitchen'];
   CollectionReference<Map<String, dynamic>> users =
       FirebaseFirestore.instance.collection('users');
@@ -76,78 +80,176 @@ class _TradeAreaState extends State<TradeArea> {
   }
 
   Future<void> categoryGetter(String list) async {
-    if (list == 'vegslist') {
-      final result =
-          await DatabaseService().getFromFirebaseCategoriesOfMY('vegetables');
+      List<List<Map<String,dynamic>>> result = [];
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('vegetables'));
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('fruits'));
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('tools'));
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('kitchen'));
       setState(() {
-        vegslist = result;
+        allmylist = result;
       });
-    } else if (list == 'frutslist') {
-      final result =
-          await DatabaseService().getFromFirebaseCategoriesOfMY('fruits');
+  }
+  Future<void> categoryGetterPartner(String list) async {
+      List<List<Map<String,dynamic>>> result = [];
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('vegetables'));
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('fruits'));
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('tools'));
+      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('kitchen'));
       setState(() {
-        frutslist = result;
+        allpartnerlist = result;
       });
-    } else if (list == 'toolslist') {
-      final result = await DatabaseService().getFromFirebaseCategoriesOfMY('tools');
-      setState(() {
-        toolslist = result;
-      });
-    } else if (list == 'kitchenslist') {
-      final result =
-          await DatabaseService().getFromFirebaseCategoriesOfMY('kitchen');
-      setState(() {
-        kitchenslist = result;
-      });
-    }
   }
 
-  buildProductItems(int index, Map<String, dynamic> taboption) {
-    Map<String, dynamic> selection = taboption[taboption.keys.first];
-    return GestureDetector(
-      onTap: () => setState(() {
-        resetDetails(index, selection);
-      }),
-      child: SizedBox(
-        height: 150,
+  buildProductItems(int index, List<Map<String, dynamic>> categorylist) {
+    List<Widget> items = [];
+    for (var item = 0; item < categorylist.length; item++) {
+      Map<String, dynamic> selection = categorylist[item].values.first;
+      items.add( GestureDetector(
+                 onTap: () => setState(() {
+                   resetDetails(index, selection);
+                 }),
+                 child: SizedBox(
+                   height: 100,
+                   child: Card(
+                       color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
+                       child: ListTile(
+                         leading: SizedBox(
+                             height: 150,
+                             child: Image(
+                                 height: 80,
+                                 width: 70,
+                                 image: AssetImage(
+                                     'assets/images/${selection['name']}.png'))),
+                         title: SizedBox(
+                             height: 100,
+                             child: Padding(
+                               padding: const EdgeInsets.only(left: 2.0),
+                               child: Column(
+                                 children: [
+                                    Container(
+                                       child: Padding(
+                                          padding: const EdgeInsets.only(right: 58.0),
+                                          child: Text(
+                                            selection['name'].toString().toUpperCase(),
+                                            style: const TextStyle(
+                                                color: Color.fromARGB(255, 255, 255, 255),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold)),
+                                    )),
+                                    SizedBox(
+                                      height: 60,
+                                      child: Row(
+                                        children: [
+                                          SizedBox(
+                                             width: width / 2 - 75,
+                                             child: ListView(
+                                               scrollDirection: Axis.vertical,
+                                               children: [
+                                                 const SizedBox(
+                                                     height: 5, child: Text('')),
+                                                 Center(
+                                                     child: Text(
+                                                         '${selection['price']} \$',
+                                                         style: const TextStyle(
+                                                             color: Colors.white,
+                                                             fontSize: 14,
+                                                             fontWeight:
+                                                                 FontWeight.bold))),
+                                                 const SizedBox(
+                                                   height: 5,
+                                                 ),
+                                                 Center(
+                                                     child: Text('${selection['amount']}',
+                                                         style: const TextStyle(
+                                                             color: Colors.white,
+                                                             fontSize: 14,
+                                                             fontWeight: FontWeight.bold)))
+                                               ],
+                                             ),
+                                          ),
+                                          const Expanded(flex: 2, child: Text('')),
+                                          SizedBox(
+                                            width: width / 2 - 75,
+                                            child: ListView(
+                                              scrollDirection: Axis.vertical,
+                                              children: [
+                                                const SizedBox(
+                                                    height: 5, child: Text('')),
+                                                Center(
+                                                   child: Image(
+                                                       height: 30,
+                                                       width: 100,
+                                                       image: AssetImage(selection['amount']=='0' ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
+                                               const SizedBox(
+                                                 height: 5,
+                                               ),
+                                               Center(
+                                                   child: Text(
+                                                       '${selection['percent']}%',
+                                                       style: const TextStyle(
+                                                           color: Colors.white,
+                                                           fontSize: 14,
+                                                           fontWeight: FontWeight.bold)))
+                                             ],
+                                           ),
+                                         ),
+                                         const Expanded(flex: 1, child: Text('')),
+                                       ],
+                                     ),
+                                   ),
+                                 ],
+                               ),
+                             )),
+                       )),
+                 ),
+               )
+      );
+    }
+    return Column(children: items,);
+  }
+   Widget buildProductItemsPartner(int index, List<Map<String, dynamic>> categorylist) {
+    List<Widget> items = [];
+    if(categorylist == []){return const Center(child: Text('nothing'));}
+    for (var item = 0; item < categorylist.length; item++) {
+      Map<String, dynamic> selection = categorylist[item].values.first;
+      items.add( SizedBox(
+        height: 100,
         child: Card(
             color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
                   child: Image(
-                      height: 100,
+                      height: 80,
                       width: 70,
                       image: AssetImage(
                           'assets/images/${selection['name']}.png'))),
               title: SizedBox(
-                  height: 130,
+                  height: 100,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 2.0),
                     child: Column(
                       children: [
-                        Container(
-                            child: Padding(
-                          padding: const EdgeInsets.only(right: 58.0),
-                          child: Text(
+                         Padding(
+                            padding: const EdgeInsets.only(right: 58.0),
+                            child: Text(
                               selection['name'].toString().toUpperCase(),
                               style: const TextStyle(
                                   color: Color.fromARGB(255, 255, 255, 255),
-                                  fontSize: 16,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.bold)),
-                        )),
-                        SizedBox(
-                          height: 100,
-                          child: Row(
-                            children: [
-                              Container(
-                                child: SizedBox(
+                         ),
+                         SizedBox(
+                           height: 60,
+                           child: Row(
+                             children: [
+                               SizedBox(
                                   width: width / 2 - 75,
                                   child: ListView(
                                     scrollDirection: Axis.vertical,
                                     children: [
                                       const SizedBox(
-                                          height: 30, child: Text('')),
+                                          height: 5, child: Text('')),
                                       Center(
                                           child: Text(
                                               '${selection['price']} \$',
@@ -157,7 +259,7 @@ class _TradeAreaState extends State<TradeArea> {
                                                   fontWeight:
                                                       FontWeight.bold))),
                                       const SizedBox(
-                                        height: 30,
+                                        height: 5,
                                       ),
                                       Center(
                                           child: Text('${selection['amount']}',
@@ -167,23 +269,22 @@ class _TradeAreaState extends State<TradeArea> {
                                                   fontWeight: FontWeight.bold)))
                                     ],
                                   ),
-                                ),
-                              ),
-                              const Expanded(flex: 2, child: Text('')),
-                              SizedBox(
-                                width: width / 2 - 75,
-                                child: ListView(
-                                  scrollDirection: Axis.vertical,
-                                  children: [
-                                    const SizedBox(
-                                        height: 30, child: Text('')),
-                                    Center(
+                               ),
+                               const Expanded(flex: 2, child: Text('')),
+                               SizedBox(
+                                 width: width / 2 - 75,
+                                 child: ListView(
+                                   scrollDirection: Axis.vertical,
+                                   children: [
+                                     const SizedBox(
+                                         height: 5, child: Text('')),
+                                     Center(
                                         child: Image(
                                             height: 30,
                                             width: 100,
                                             image: AssetImage(selection['amount']=='0' ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
                                     const SizedBox(
-                                      height: 20,
+                                      height: 5,
                                     ),
                                     Center(
                                         child: Text(
@@ -203,8 +304,25 @@ class _TradeAreaState extends State<TradeArea> {
                     ),
                   )),
             )),
-      ),
-    );
+      )
+      );
+    }
+    return Column(children: items,);
+  }
+  int allmylistLengthFN(){
+    int temp = 0;
+    for (var list in allmylist) {
+      temp += list.length;
+    }
+    return temp;
+  }
+  int allpartnerlistLengthFN(){
+    int temp = 0;
+    for (var list in allpartnerlist) {
+      if(list.isEmpty){temp += 1;}
+      temp += list.length;
+    }
+    return temp;
   }
   @override
   Widget build(BuildContext context) {
@@ -240,48 +358,7 @@ class _TradeAreaState extends State<TradeArea> {
         stream: users.snapshots(),
         builder: (context, userssnapshot) {
            if(!userssnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-           if (currenttoptab == 'vegetables') {
-              categoryGetter('vegslist');
-          } else if (currenttoptab == 'fruits'){
-              categoryGetter('frutslist');
-          }
-          else if (currenttoptab == 'tools'){
-            categoryGetter('toolslist');
-          }
-          else if (currenttoptab == 'kitchen'){
-            categoryGetter('kitchenslist');
-          }
-          for (var doc in userssnapshot.data!.docs) {
-            if (FirebaseAuth.instance.currentUser!.uid == doc.id) {
-              if (breaker) {
-                 if (doc.data()['vegetables'] != null) {
-                   for (var i = 0; i < doc.data()['vegetables'].length; i++) {
-                     vegis.add(doc.data()['vegetables'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['fruits'] != null) {
-                   for (var i = 0; i < doc.data()['fruits'].length; i++) {
-                     frus.add(doc.data()['fruits'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['tools'] != null) {
-                   for (var i = 0; i < doc.data()['tools'].length; i++) {
-                     tols.add(doc.data()['tools'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['kitchen'] != null) {
-                   for (var i = 0; i < doc.data()['kitchen'].length; i++) {
-                     kitchens.add(doc.data()['kitchen'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-              }
-            }
-          }
-          
+
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: tradeareaCollection.snapshots(),
             builder: (context, tradeareasnapshot) {
@@ -290,114 +367,92 @@ class _TradeAreaState extends State<TradeArea> {
               for (var doc in tradeareasnapshot.data!.docs) {
                 for (var udoc in userssnapshot.data!.docs) {
                   if(userssnapshot.data!.docs.any((udoc) => FirebaseAuth.instance.currentUser!.uid == udoc.id)){
+                    
                     if(doc.data()['tradesman1'] == udoc.data()['nickname'] || doc.data()['tradesman2'] == udoc.data()['nickname']){
                       if(doc.data()['tradesman1'] == udoc.data()['nickname']){
                         iambuilder = true;
+                        break;
                       }
                       else if(doc.data()['tradesman2'] == udoc.data()['nickname']){
                         iambuilder = false;
+                        break;
                       }
                     }
                   }
                 }
               }
-              print(iambuilder);
+              categoryGetter('alllist');
+              categoryGetterPartner('alllist');
+              allmylistLength = allmylistLengthFN(); 
+              allpartnerlistLength = allpartnerlistLengthFN();
               return SingleChildScrollView(
                 child: Center(
                   child: Container(
                     height: height,
                     width: width,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                           colorFilter: ColorFilter.mode(
-                             Colors.white,
-                             BlendMode.softLight,
-                           ),
-                           image: AssetImage("assets/images/tradebg.png"),
-                           //repeat: ImageRepeat.repeat,
-                           fit: BoxFit.contain,
-                           alignment: Alignment.topCenter,
-                           opacity: 0.3
-                         ),
-                    ),
                     child: Column(children: [
                           iambuilder ?  
-                          SizedBox(
-                              height: height / 2.5,
-                              width: width,
-                              child: Center(
-                                  child: ListView.separated(
-                                      itemBuilder: (context, index) =>
-                                          currenttoptab == 'vegetables' ? 
-                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index,vegslist[index]) 
-                                        : currenttoptab == 'fruits' ? 
-                                        frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index,frutslist[index])
-                                        : currenttoptab == 'tools' ? 
-                                        toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index, toolslist[index])
-                                        : currenttoptab == 'kitchen' ?
-                                        kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index, kitchenslist[index])
-                                        :
-                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index,vegslist[index]) 
-                                        , 
-                                      separatorBuilder: (context, index) =>
-                                          const Divider(),
-                                      itemCount: currenttoptab == 'vegetables' ? 
-                                              vegis.length
-                                              :  currenttoptab == 'fruits' ?
-                                              frus.length
-                                              :  currenttoptab == 'tools' ?
-                                              tols.length
-                                              : currenttoptab == 'kitchen' ?
-                                              kitchens.length
-                                              : vegis.length
-                                              )
-                                              )
-                            )
-                            : Container(),
-                            const Divider(color: Colors.purple,height: 15,thickness: 10,indent: 10,endIndent: 10),
-                            iambuilder ? Container() : 
+                          Column(children: [
                             SizedBox(
-                              height: height / 2.5,
+                              height: height / 2.3,
                               width: width,
                               child: Center(
                                   child: ListView.separated(
-                                      itemBuilder: (context, index) =>
-                                          currenttoptab == 'vegetables' ? 
-                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index,vegslist[index]) 
-                                        : currenttoptab == 'fruits' ? 
-                                        frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index,frutslist[index])
-                                        : currenttoptab == 'tools' ? 
-                                        toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index, toolslist[index])
-                                        : currenttoptab == 'kitchen' ?
-                                        kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index, kitchenslist[index])
-                                        :
-                                        vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                        buildProductItems(index,vegslist[index]) 
-                                        , 
+                                      itemBuilder: (context, index) => //Column(children: [
+                                        buildProductItems(index,allmylist[index]),
+                                     // ],),
                                       separatorBuilder: (context, index) =>
-                                          const Divider(),
-                                      itemCount: currenttoptab == 'vegetables' ? 
-                                              vegis.length 
-                                              :  currenttoptab == 'fruits' ?
-                                              frus.length
-                                              :  currenttoptab == 'tools' ?
-                                              tols.length
-                                              : currenttoptab == 'kitchen' ?
-                                              kitchens.length
-                                              : vegis.length
+                                          Container(height: 1,),
+                                      itemCount: allmylistLength
+                                              )
+                                              )
+                            ),
+                            const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 11,thickness: 6,indent: 10,endIndent: 10),
+                            const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 7,thickness: 6,indent: 10,endIndent: 10),
+                            SizedBox(
+                              height: height / 2.3,
+                              width: width,
+                              child: Center(
+                                  child: ListView.separated(
+                                      itemBuilder: (context, index) => buildProductItemsPartner(index,allpartnerlist[index]),
+                                      separatorBuilder: (context, index) =>
+                                          Container(height: 1,),
+                                      itemCount: allpartnerlistLength
+                                              )
+                                              )
+                            ),  
+                           ])
+                           :
+                           Column(children: [
+                              SizedBox(
+                              height: height / 2.3,
+                              width: width,
+                              child: Center(
+                                  child: ListView.separated(
+                                      itemBuilder: (context, index) => buildProductItemsPartner(index,allpartnerlist[index]),
+                                      separatorBuilder: (context, index) =>
+                                          Container(height: 1,),
+                                      itemCount: allpartnerlistLength
+                                              )
+                                              )
+                            ),
+                            const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 11,thickness: 6,indent: 10,endIndent: 10),
+                            const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 7,thickness: 6,indent: 10,endIndent: 10),
+                            SizedBox(
+                              height: height / 2.3,
+                              width: width,
+                              child: Center(
+                                  child: ListView.separated(
+                                      itemBuilder: (context, index) =>// Column(children: [
+                                        buildProductItems(index,allmylist[index]),
+                                     // ],),
+                                      separatorBuilder: (context, index) =>
+                                          Container(height: 1,),
+                                      itemCount: allmylistLength
                                               )
                                               )
                             )
-                           // : Container()
+                            ],),
                     ]),
                   )),
               );

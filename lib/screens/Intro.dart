@@ -104,7 +104,7 @@ class _IntroPageState extends State<IntroPage> {
                                      takennicknameerror = '';
                                    });
                                    await DatabaseService().setNickname(nickname);
-                                   Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
+                                   await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
                                  }
                       },
                       style: ButtonStyle(

@@ -180,6 +180,39 @@ class DatabaseService{
       }
       return maps;
     }
+//////////////////////////////////////////////////////////////SHOWING IN THE MY LISTVIEW////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<List<Map<String, dynamic>>> getFromFirebaseCategoriesOfPartner(String categoryname)async{//MYPRODUCTS LISTVIEW
+      String partneruserid = '';
+      String partner = '';
+      QuerySnapshot<Map<String, dynamic>> users = await usersCollection.get();
+      QuerySnapshot<Map<String, dynamic>> traders = await traderoomsCollection.get();
+      for (var userdoc in users.docs) { //TO FIND MY ROOMID IN TRADEAREA
+        for (var d in traders.docs) {
+          if(d.data()['tradesman1'] == userdoc.data()['nickname'] && userdoc.id == FirebaseAuth.instance.currentUser!.uid){
+            partner = d.data()['tradesman2'];
+          }
+          else if(d.data()['tradesman2'] == userdoc.data()['nickname'] && userdoc.id == FirebaseAuth.instance.currentUser!.uid){
+            partner = d.data()['tradesman1'];
+          }
+        }
+      }
+      for (var doc in users.docs) { 
+        if(doc.data()['nickname'] == partner){
+          partneruserid = doc.id;
+        }
+      }
+      
+      DocumentSnapshot<Map<String, dynamic>> usersdocs = await usersCollection.doc(partneruserid).get();
+     
+      List<Map<String,dynamic>> maps = [];
+      final data = usersdocs.data()![categoryname];
+      if(data == null){return [];}
+      for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
+          maps.add({data[i].keys.first : data[i].values.first});
+      }
+      // print(maps);
+      return maps;
+    }
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Future<String> createTrade()async{
       String id = (Random().nextInt(89999)+10000).toString();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zelix_trade/authenticate/loginpage.dart';
-import 'package:zelix_trade/screens/home.dart';
+import 'package:zelix_trade/screens/Intro.dart';
 import 'package:zelix_trade/services/authservice.dart';
 
 class SignupPage extends StatefulWidget {
@@ -204,7 +204,7 @@ class _SignupPageState extends State<SignupPage> {
                                   );
                                 }
                                 else{
-                                 await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Home()));
+                                 await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const IntroPage()));
                                 }
                               }
                             },
