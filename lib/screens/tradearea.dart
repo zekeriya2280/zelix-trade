@@ -20,6 +20,7 @@ class _TradeAreaState extends State<TradeArea> {
   bool iambuilder = false;
   int allmylistLength = 0;
   int allpartnerlistLength = 0;
+  String? selectedItem = 'Select';
   List<String> frus = [];
   List<String> vegis = [];
   List<String> tols = [];
@@ -64,17 +65,18 @@ class _TradeAreaState extends State<TradeArea> {
           onClose: () {},
           featureKey: 3,
           hasButton: true,
-          buttonText: 'SELL',
+          buttonText: 'SELECT',
           buttonTextFontSize: 27,
           descriptionColor: Colors.white,
           descriptionFontSize: 20,
           backgroundColor: Colors.white54, 
           buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
           onTapButton: selection['amount'] == '0'? null : ()async{
-            await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TradeArea())); })
-               );
-              setState(() { });
+            //await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
+            await DatabaseService().selectMyItem(selection['name']);  
+            //setState(() {
+            //});
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TradeArea())); 
         });
     });
   }
@@ -111,7 +113,7 @@ class _TradeAreaState extends State<TradeArea> {
                  child: SizedBox(
                    height: 100,
                    child: Card(
-                       color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
+                       color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
                        child: ListTile(
                          leading: SizedBox(
                              height: 150,
@@ -215,7 +217,7 @@ class _TradeAreaState extends State<TradeArea> {
       items.add( SizedBox(
         height: 100,
         child: Card(
-            color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
+            color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
@@ -324,12 +326,49 @@ class _TradeAreaState extends State<TradeArea> {
     }
     return temp;
   }
+  bool iambuilderFinderFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot,AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> userssnapshot){
+    bool temp = false;
+    for (var doc in tradeareasnapshot.data!.docs) {
+                for (var udoc in userssnapshot.data!.docs) {
+                  if(userssnapshot.data!.docs.any((udoc) => FirebaseAuth.instance.currentUser!.uid == udoc.id)){
+                    
+                    if(doc.data()['tradesman1'] == udoc.data()['nickname'] || doc.data()['tradesman2'] == udoc.data()['nickname']){
+                      if(doc.data()['tradesman1'] == udoc.data()['nickname']){
+                        //setState(() {
+                          temp = true;
+                        //});
+                        break;
+                      }
+                      else if(doc.data()['tradesman2'] == udoc.data()['nickname']){
+                        //setState(() {
+                          temp = false;
+                        //});
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+    return temp;
+  }
+  String? selecteditemFinderFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot){
+    String temp = '';
+    for (var doc in tradeareasnapshot.data!.docs) {
+      if(doc.data()['selectedmyItem'] != null){
+          temp = doc.data()['selectedmyItem'];
+      }
+    }
+    return temp;
+  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
     width = MediaQuery.of(context).size.width;
     height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 40,
         backgroundColor: const Color.fromARGB(134, 255, 191, 0),
             title: Row(
               children: [
@@ -364,37 +403,24 @@ class _TradeAreaState extends State<TradeArea> {
             builder: (context, tradeareasnapshot) {
               if(!tradeareasnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
 
-              for (var doc in tradeareasnapshot.data!.docs) {
-                for (var udoc in userssnapshot.data!.docs) {
-                  if(userssnapshot.data!.docs.any((udoc) => FirebaseAuth.instance.currentUser!.uid == udoc.id)){
-                    
-                    if(doc.data()['tradesman1'] == udoc.data()['nickname'] || doc.data()['tradesman2'] == udoc.data()['nickname']){
-                      if(doc.data()['tradesman1'] == udoc.data()['nickname']){
-                        iambuilder = true;
-                        break;
-                      }
-                      else if(doc.data()['tradesman2'] == udoc.data()['nickname']){
-                        iambuilder = false;
-                        break;
-                      }
-                    }
-                  }
-                }
-              }
+              iambuilder = iambuilderFinderFN(tradeareasnapshot,userssnapshot);
               categoryGetter('alllist');
               categoryGetterPartner('alllist');
               allmylistLength = allmylistLengthFN(); 
               allpartnerlistLength = allpartnerlistLengthFN();
+              selectedItem = selecteditemFinderFN(tradeareasnapshot) ?? "Select";
+
               return SingleChildScrollView(
                 child: Center(
-                  child: Container(
+                  child: SizedBox(
                     height: height,
                     width: width,
                     child: Column(children: [
                           iambuilder ?  
                           Column(children: [
+                            /////////////////////////////////////////////////////////////// I AM BUILDER OTHER IS JOINER
                             SizedBox(
-                              height: height / 2.3,
+                              height: height / 3,
                               width: width,
                               child: Center(
                                   child: ListView.separated(
@@ -407,25 +433,79 @@ class _TradeAreaState extends State<TradeArea> {
                                               )
                                               )
                             ),
+                            Container(
+                              color: const Color.fromARGB(134, 255, 191, 0),
+                              padding: const EdgeInsets.all(6),
+                              margin: const EdgeInsets.all(2),
+                              height: 75,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const SizedBox(width: 0,),
+                                  Column(
+                                    children: [
+                                      const Text('Item',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      SizedBox(
+                                        height: 20,
+                                        child: Text(selectedItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),),
+                                      )
+                                    ]
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text('Amount',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      SizedBox(
+                                        height: 42,
+                                        width: 100,
+                                        child: Center(
+                                          child: TextFormField(
+                                            maxLength: 5,
+                                            style: const TextStyle(color: Colors.purple),
+                                            textAlign: TextAlign.center,
+                                            cursorColor: Colors.green,
+                                            decoration: InputDecoration(
+                                              focusColor: Colors.green,
+                                              border: OutlineInputBorder(
+                                                borderSide: const BorderSide(
+                                                  color: Colors.green
+                                                ),
+                                                borderRadius: BorderRadius.circular(10.0),
+                                              )
+                                            )
+                                          ),
+                                        ),
+                                      )
+                                    ]
+                                  ),
+                                  const Column(
+                                    children: [
+                                      Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      SizedBox(
+                                        height: 30,
+                                        child: Text('1500\$',style: TextStyle(color: Colors.purple,fontSize: 15),),
+                                      )
+                                    ]
+                                  ),
+                                  SizedBox(
+                                    height: 50,
+                                    width: 100,
+                                    child: ElevatedButton(
+                                      style: const ButtonStyle(
+                                        shadowColor: MaterialStatePropertyAll(Colors.green),
+                                        side: MaterialStatePropertyAll(BorderSide(color: Colors.green)),
+                                      ),
+                                      onPressed: (){}, 
+                                      child: const Center(child: Text('SELL',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
+                                  )
+                                ],
+                              ),
+                            ),
+                            ////////////////////////////////////////////////////////////////////////////////////////////////////////
                             const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 11,thickness: 6,indent: 10,endIndent: 10),
                             const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 7,thickness: 6,indent: 10,endIndent: 10),
+                            //////////////////////////////////////////////////////////////////////////////////////////////////////// 
                             SizedBox(
-                              height: height / 2.3,
-                              width: width,
-                              child: Center(
-                                  child: ListView.separated(
-                                      itemBuilder: (context, index) => buildProductItemsPartner(index,allpartnerlist[index]),
-                                      separatorBuilder: (context, index) =>
-                                          Container(height: 1,),
-                                      itemCount: allpartnerlistLength
-                                              )
-                                              )
-                            ),  
-                           ])
-                           :
-                           Column(children: [
-                              SizedBox(
-                              height: height / 2.3,
+                              height: height / 2.82,
                               width: width,
                               child: Center(
                                   child: ListView.separated(
@@ -436,10 +516,133 @@ class _TradeAreaState extends State<TradeArea> {
                                               )
                                               )
                             ),
+                            Container(
+                              color: const Color.fromARGB(134, 255, 191, 0),
+                              padding: const EdgeInsets.all(6),
+                              margin: const EdgeInsets.all(2),
+                              height: 75,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const SizedBox(width: 0,),
+                                  Column(
+                                    children: [
+                                      const Text('Item',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      SizedBox(
+                                        height: 20,
+                                        child: Text(selectedItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),),
+                                      )
+                                    ]
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text('Amount',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      SizedBox(
+                                        height: 42,
+                                        width: 100,
+                                        child: Center(
+                                          child: TextFormField(
+                                            maxLength: 5,
+                                            style: const TextStyle(color: Colors.purple),
+                                            textAlign: TextAlign.center,
+                                            cursorColor: Colors.green,
+                                            decoration: InputDecoration(
+                                              focusColor: Colors.green,
+                                              border: OutlineInputBorder(
+                                                borderSide: const BorderSide(
+                                                  color: Colors.green
+                                                ),
+                                                borderRadius: BorderRadius.circular(10.0),
+                                              )
+                                            )
+                                          ),
+                                        ),
+                                      )
+                                    ]
+                                  ),
+                                  const Column(
+                                    children: [
+                                      Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      SizedBox(
+                                        height: 30,
+                                        child: Text('1500\$',style: TextStyle(color: Colors.purple,fontSize: 15),),
+                                      )
+                                    ]
+                                  ),
+                                  SizedBox(
+                                    height: 50,
+                                    width: 100,
+                                    child: ElevatedButton(
+                                      style: const ButtonStyle(
+                                        shadowColor: MaterialStatePropertyAll(Colors.green),
+                                        side: MaterialStatePropertyAll(BorderSide(color: Colors.green)),
+                                      ),
+                                      onPressed: (){}, 
+                                      child: const Center(child: Text('SELL',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
+                                  )
+                                ],
+                              ),
+                            ), 
+                           ])
+                           ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////I AM JOINER OTHER IS BUILDER//////////////
+                           :
+                           Column(children: [
+                            SizedBox(
+                            height: height / 3.1,
+                            width: width,
+                            child: Center(
+                                  child: ListView.separated(
+                                      itemBuilder: (context, index) => buildProductItemsPartner(index,allpartnerlist[index]),
+                                      separatorBuilder: (context, index) =>
+                                          Container(height: 1,),
+                                      itemCount: allpartnerlistLength
+                                              )
+                                              )
+                            ),
+                            Container(
+                              color: const Color.fromARGB(134, 255, 191, 0),
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.all(2),
+                              height: 68,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Text('Item'),
+                                      SizedBox(
+                                        height: 20,
+                                        child: Text('apple',style: TextStyle(color: Colors.green),),
+                                      )
+                                    ]
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text('Item'),
+                                      SizedBox(
+                                        height: 30,
+                                        child: Text('apple',style: TextStyle(color: Colors.green),),
+                                      )
+                                    ]
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text('Item'),
+                                      SizedBox(
+                                        height: 30,
+                                        child: Text('apple',style: TextStyle(color: Colors.green),),
+                                      )
+                                    ]
+                                  )
+                                ],
+                              ),
+                            ),
+                            ////////////////////////////////////////////////////////////////////////////////////////////////////////
                             const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 11,thickness: 6,indent: 10,endIndent: 10),
                             const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 7,thickness: 6,indent: 10,endIndent: 10),
+                            //////////////////////////////////////////////////////////////////////////////////////////////////////// 
                             SizedBox(
-                              height: height / 2.3,
+                              height: height / 3.1,
                               width: width,
                               child: Center(
                                   child: ListView.separated(
@@ -451,7 +654,45 @@ class _TradeAreaState extends State<TradeArea> {
                                       itemCount: allmylistLength
                                               )
                                               )
-                            )
+                            ),
+                            Container(
+                              color: const Color.fromARGB(134, 255, 191, 0),
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.all(2),
+                              height: 68,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Text('Item'),
+                                      SizedBox(
+                                        height: 20,
+                                        child: Text('apple',style: TextStyle(color: Colors.green),),
+                                      )
+                                    ]
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text('Item'),
+                                      SizedBox(
+                                        height: 30,
+                                        child: Text('apple',style: TextStyle(color: Colors.green),),
+                                      )
+                                    ]
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text('Item'),
+                                      SizedBox(
+                                        height: 30,
+                                        child: Text('apple',style: TextStyle(color: Colors.green),),
+                                      )
+                                    ]
+                                  )
+                                ],
+                              ),
+                            ),
                             ],),
                     ]),
                   )),

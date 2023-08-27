@@ -252,7 +252,25 @@ class DatabaseService{
             if(doc.data()['tradesman2'] == nickname){
               doc.reference.delete();
             }
+            else{
+              if(doc.data()['tradesman1'] == nickname){
+              doc.reference.delete();
+            }
+            }
           }
       });
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<String> selectMyItem(String selectedItem)async{
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+        nickname = value.data()!['nickname'].toString()
+      );
+      QuerySnapshot<Map<String, dynamic>> query = await traderoomsCollection.get();
+        for (var doc in query.docs) { 
+          if(doc.data()['tradesman1'] == nickname || doc.data()['tradesman2'] == nickname){
+            await traderoomsCollection.doc(doc.id).update({'selectedmyItem': selectedItem});
+          }
+        }
+      return selectedItem;
     }
 }

@@ -115,7 +115,7 @@ class _MyProductsState extends State<MyProducts> {
       child: SizedBox(
         height: 150,
         child: Card(
-            color: selection['amount']=='0' ? const Color.fromARGB(255, 50, 56, 50) : const Color.fromARGB(255, 38, 184, 43),
+            color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
