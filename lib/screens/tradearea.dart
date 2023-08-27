@@ -21,6 +21,9 @@ class _TradeAreaState extends State<TradeArea> {
   int allmylistLength = 0;
   int allpartnerlistLength = 0;
   String? selectedItem = 'Select';
+  String? selectedPartnerItem = 'Select';
+  String selectemitemprice = '0';
+  String selecteditemamount = '0';
   List<String> frus = [];
   List<String> vegis = [];
   List<String> tols = [];
@@ -37,7 +40,7 @@ class _TradeAreaState extends State<TradeArea> {
   CollectionReference<Map<String, dynamic>> tradeareaCollection =
       FirebaseFirestore.instance.collection('traderooms');
   String currenttoptab = 'vegetables';
-    void resetDetails(int index, Map<String, dynamic> selection) {
+  void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
       FeatureNotifier.persistAll();
       productDetails(index, selection);
@@ -72,10 +75,47 @@ class _TradeAreaState extends State<TradeArea> {
           backgroundColor: Colors.white54, 
           buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
           onTapButton: selection['amount'] == '0'? null : ()async{
-            //await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-            await DatabaseService().selectMyItem(selection['name']);  
-            //setState(() {
-            //});
+            await DatabaseService().selectMyItem(selection['name']);
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TradeArea())); 
+        });
+    });
+  }
+    void resetDetailsPartner(int index, Map<String, dynamic> selection) {
+    setState(() {
+      FeatureNotifier.persistAll();
+      productDetailsPartner(index, selection);
+    });
+  }
+
+  void productDetailsPartner(int index, Map<String, dynamic> selection)async {
+    WidgetsBinding.instance.addPostFrameCallback((_)  {
+      FeatureAlertNotifier.notify(context,
+          image: Container(
+              margin: const EdgeInsets.only(top: 0),
+              child: Center(
+                child: Image(
+                  height: 120,
+                    image: AssetImage('assets/images/${selection['name']}.png')),
+              )),
+          titleFontSize: 28,
+          title: "      ${selection['name'].toString().toUpperCase()}",
+          titleColor: Colors.white,
+          description:
+             "       Price: ¥ ${selection['price']}   "
+           "\n       Amount: ${selection['amount']}  "
+           "\n       State: ${selection['incdec'] == 'inc' ? 'Increasing' : 'Decreasing'} "
+           "\n       Percentage: ${selection['percent']}% ",
+          onClose: () {},
+          featureKey: 3,
+          hasButton: true,
+          buttonText: 'SELECT',
+          buttonTextFontSize: 27,
+          descriptionColor: Colors.white,
+          descriptionFontSize: 20,
+          backgroundColor: Colors.white54, 
+          buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
+          onTapButton: selection['amount'] == '0'? null : ()async{
+            await DatabaseService().selectPartnersItem(selection['name']);
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TradeArea())); 
         });
     });
@@ -214,7 +254,11 @@ class _TradeAreaState extends State<TradeArea> {
     if(categorylist == []){return const Center(child: Text('nothing'));}
     for (var item = 0; item < categorylist.length; item++) {
       Map<String, dynamic> selection = categorylist[item].values.first;
-      items.add( SizedBox(
+      items.add(GestureDetector(
+                 onTap: () => setState(() {
+                   resetDetailsPartner(index, selection);
+                 }),
+                 child: SizedBox(
         height: 100,
         child: Card(
             color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
@@ -306,7 +350,7 @@ class _TradeAreaState extends State<TradeArea> {
                     ),
                   )),
             )),
-      )
+      ))
       );
     }
     return Column(children: items,);
@@ -360,6 +404,18 @@ class _TradeAreaState extends State<TradeArea> {
     }
     return temp;
   }
+  String? selecteditemFinderPartnerFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot){
+    String temp = '';
+    for (var doc in tradeareasnapshot.data!.docs) {
+      if(doc.data()['selectedPartnerItem'] != null){
+          temp = doc.data()['selectedPartnerItem'];
+      }
+    }
+    return temp;
+  }
+  void selectedItemPriceFinderFN(String? selectedItem,String selecteditemamount)async{
+      await DatabaseService().selectMyItemPrice(selectedItem!,selecteditemamount).then((value) => selectemitemprice = value);
+  }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
@@ -409,7 +465,8 @@ class _TradeAreaState extends State<TradeArea> {
               allmylistLength = allmylistLengthFN(); 
               allpartnerlistLength = allpartnerlistLengthFN();
               selectedItem = selecteditemFinderFN(tradeareasnapshot) ?? "Select";
-
+              selectedPartnerItem = selecteditemFinderPartnerFN(tradeareasnapshot) ?? "Select";
+              selectedItemPriceFinderFN(selectedItem,selecteditemamount);
               return SingleChildScrollView(
                 child: Center(
                   child: SizedBox(
@@ -418,7 +475,7 @@ class _TradeAreaState extends State<TradeArea> {
                     child: Column(children: [
                           iambuilder ?  
                           Column(children: [
-                            /////////////////////////////////////////////////////////////// I AM BUILDER OTHER IS JOINER
+                            ///////////////////////////////////////////////////////////////////////////////////////////////////////////// I AM BUILDER OTHER IS JOINER
                             SizedBox(
                               height: height / 3,
                               width: width,
@@ -446,24 +503,32 @@ class _TradeAreaState extends State<TradeArea> {
                                     children: [
                                       const Text('Item',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
                                       SizedBox(
-                                        height: 20,
-                                        child: Text(selectedItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),),
+                                        height: 40,
+                                        child: Center(child: Text(selectedItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),)),
                                       )
                                     ]
                                   ),
                                   Column(
                                     children: [
-                                      const Text('Amount',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
-                                      SizedBox(
-                                        height: 42,
+                                      const SizedBox(
+                                        height: 28,
+                                        child: Text('Amount',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),)),
+                                      Container(
+                                        color: Colors.yellow,
+                                        height: 25,
                                         width: 100,
                                         child: Center(
+                                          heightFactor: 2,
                                           child: TextFormField(
+                                            textAlignVertical: TextAlignVertical.bottom,
+                                            cursorHeight: 20,
                                             maxLength: 5,
                                             style: const TextStyle(color: Colors.purple),
                                             textAlign: TextAlign.center,
-                                            cursorColor: Colors.green,
+                                            cursorColor: Colors.purple,
                                             decoration: InputDecoration(
+                                              hintText: "Amount",
+                                              counterText: "",
                                               focusColor: Colors.green,
                                               border: OutlineInputBorder(
                                                 borderSide: const BorderSide(
@@ -471,23 +536,29 @@ class _TradeAreaState extends State<TradeArea> {
                                                 ),
                                                 borderRadius: BorderRadius.circular(10.0),
                                               )
-                                            )
+                                            ),
+                                            onChanged: (v){
+                                              setState(() {
+                                                selecteditemamount = v;
+                                              });
+                                            },
                                           ),
                                         ),
                                       )
                                     ]
                                   ),
-                                  const Column(
+                                  Column(
                                     children: [
-                                      Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      const Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
                                       SizedBox(
-                                        height: 30,
-                                        child: Text('1500\$',style: TextStyle(color: Colors.purple,fontSize: 15),),
+                                        height: 40,
+                                        width: 70,
+                                        child: Center(child: Text(selectemitemprice,style: const TextStyle(color: Colors.purple,fontSize: 15),)),
                                       )
                                     ]
                                   ),
                                   SizedBox(
-                                    height: 50,
+                                    height: 100,
                                     width: 100,
                                     child: ElevatedButton(
                                       style: const ButtonStyle(
@@ -530,7 +601,7 @@ class _TradeAreaState extends State<TradeArea> {
                                       const Text('Item',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
                                       SizedBox(
                                         height: 20,
-                                        child: Text(selectedItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),),
+                                        child: Text(selectedPartnerItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),),
                                       )
                                     ]
                                   ),
@@ -578,7 +649,7 @@ class _TradeAreaState extends State<TradeArea> {
                                         side: MaterialStatePropertyAll(BorderSide(color: Colors.green)),
                                       ),
                                       onPressed: (){}, 
-                                      child: const Center(child: Text('SELL',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
+                                      child: const Center(child: Text('BUY',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
                                   )
                                 ],
                               ),
@@ -646,9 +717,7 @@ class _TradeAreaState extends State<TradeArea> {
                               width: width,
                               child: Center(
                                   child: ListView.separated(
-                                      itemBuilder: (context, index) =>// Column(children: [
-                                        buildProductItems(index,allmylist[index]),
-                                     // ],),
+                                      itemBuilder: (context, index) =>buildProductItems(index,allmylist[index]),
                                       separatorBuilder: (context, index) =>
                                           Container(height: 1,),
                                       itemCount: allmylistLength

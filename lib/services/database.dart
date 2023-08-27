@@ -24,6 +24,19 @@ class DatabaseService{
         'nickname':nickname,
       });
   }
+  Future<void> mynicknameFinder()async{
+    await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+        nickname = value.data()!['nickname'].toString()
+    );
+  }
+  Future<void> addtoTradeAreaDB(String key, dynamic value)async{
+    QuerySnapshot<Map<String, dynamic>> query = await traderoomsCollection.get();
+    for (var doc in query.docs) { 
+      if(doc.data()['tradesman1'] == nickname || doc.data()['tradesman2'] == nickname){
+        await traderoomsCollection.doc(doc.id).update({key: value});
+      }
+    } 
+  }
   ////////////////////////////////////////////////////////ADD NEW CATEGORY TO ALL PRODUCTS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> addNewTopTab(String categoryname,String subcatname,String name,String price,String amount,String incdec,String percent)async{
       await productionsCollection.doc('bzlfiLcEKnSM8TRpoxb8').update({
@@ -273,4 +286,42 @@ class DatabaseService{
         }
       return selectedItem;
     }
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Future<String> selectPartnersItem(String selectedPartnerItem)async{
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+        nickname = value.data()!['nickname'].toString()
+      );
+      QuerySnapshot<Map<String, dynamic>> query = await traderoomsCollection.get();
+        for (var doc in query.docs) { 
+          if(doc.data()['tradesman1'] == nickname || doc.data()['tradesman2'] == nickname){
+            await traderoomsCollection.doc(doc.id).update({'selectedPartnerItem': selectedPartnerItem});
+          }
+        }
+      return selectedPartnerItem;
+    }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   Future<String> selectMyItemPrice(String selectedmyitem,String selecteditemamount)async{
+    String price = '';
+    await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) { 
+        value.data()!.forEach((key, value) {
+          if(value.runtimeType == List<dynamic>){
+            for (var map in List<Map<String,dynamic>>.from(value)) {
+              if(map.keys.first == selectedmyitem){
+                price = map.values.first['price'];
+              }
+            }
+          }
+        });
+    });
+    
+    if(selecteditemamount != '0'){
+      if(selecteditemamount != ''){
+        price = (int.parse(price.toString()) * int.parse(selecteditemamount.toString())).toString();
+      }
+    }
+    //print(price);
+    await mynicknameFinder();
+    await addtoTradeAreaDB('selectedmyItemPrice', price);
+    return price;
+  }
 }
