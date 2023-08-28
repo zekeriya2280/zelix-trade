@@ -20,10 +20,12 @@ class _TradeAreaState extends State<TradeArea> {
   bool iambuilder = false;
   int allmylistLength = 0;
   int allpartnerlistLength = 0;
+  String totalmoney = "";
   String? selectedItem = 'Select';
   String? selectedPartnerItem = 'Select';
   String selectemitemprice = '0';
   String selecteditemamount = '0';
+  Map<bool,bool> priceandamountenough = <bool,bool>{false:false};
   List<String> frus = [];
   List<String> vegis = [];
   List<String> tols = [];
@@ -40,13 +42,24 @@ class _TradeAreaState extends State<TradeArea> {
   CollectionReference<Map<String, dynamic>> tradeareaCollection =
       FirebaseFirestore.instance.collection('traderooms');
   String currenttoptab = 'vegetables';
+
+  @override
+  void initState() {
+    checktotalMoney();
+    super.initState();
+  }
   void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
       FeatureNotifier.persistAll();
       productDetails(index, selection);
     });
   }
-
+  void checktotalMoney()async{
+    setState(() async {
+      totalmoney = await DatabaseService().checktotalMoney();
+    });
+    
+  }
   void productDetails(int index, Map<String, dynamic> selection)async {
     WidgetsBinding.instance.addPostFrameCallback((_)  {
       FeatureAlertNotifier.notify(context,
@@ -416,6 +429,11 @@ class _TradeAreaState extends State<TradeArea> {
   void selectedItemPriceFinderFN(String? selectedItem,String selecteditemamount)async{
       await DatabaseService().selectMyItemPrice(selectedItem!,selecteditemamount).then((value) => selectemitemprice = value);
   }
+  void checkAmountAndPrice(String totalmoney,String selectedmyitem,String amount,String price){
+    setState(()async {
+     priceandamountenough = await DatabaseService().checkAmountAndPrice(totalmoney,selectedmyitem,amount,price);
+    });
+  }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
@@ -424,18 +442,19 @@ class _TradeAreaState extends State<TradeArea> {
     height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         toolbarHeight: 40,
         backgroundColor: const Color.fromARGB(134, 255, 191, 0),
             title: Row(
               children: [
-                 Expanded(flex: 2,child: Padding(
-                    padding: const EdgeInsets.only(left: 10),
+                 Expanded(flex: 1,child: Padding(
+                    padding: const EdgeInsets.only(left: 0),
                     child: IconButton(
                       icon:  const Icon(
                         Icons.home,
                         color: Colors.white,
                         shadows: [Shadow(color: Colors.grey, blurRadius: 100)],
-                        size: 55,
+                        size: 45,
                       ),
                       onPressed: () {
                         Navigator.pushReplacement(
@@ -444,8 +463,12 @@ class _TradeAreaState extends State<TradeArea> {
                                 builder: (context) => const Home()));
                       },
                     )),),
-                Expanded(flex: 3,child: Text('Zelix Trade',style: GoogleFonts.pacifico(fontSize: 28),)),
-                const Expanded(flex: 1,child: Text(''),),
+                Expanded(flex: 5,child: Center(child: Text('Zelix Trade',style: GoogleFonts.pacifico(fontSize: 28,color: Colors.white),))),
+                Expanded(flex: 2,child: Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Container(child: Center(child: Text('$totalmoney \$',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 20),)),)
+                    ),),
+                //const Expanded(flex: 1,child: Text(''),),
               ],
             ),
       ),
@@ -527,7 +550,7 @@ class _TradeAreaState extends State<TradeArea> {
                                             textAlign: TextAlign.center,
                                             cursorColor: Colors.purple,
                                             decoration: InputDecoration(
-                                              hintText: "Amount",
+                                              hintText: "1",
                                               counterText: "",
                                               focusColor: Colors.green,
                                               border: OutlineInputBorder(
@@ -565,7 +588,12 @@ class _TradeAreaState extends State<TradeArea> {
                                         shadowColor: MaterialStatePropertyAll(Colors.green),
                                         side: MaterialStatePropertyAll(BorderSide(color: Colors.green)),
                                       ),
-                                      onPressed: (){}, 
+                                      onPressed:selectedItem == '' || selectedItem == 'Select' ? null : (){
+                                        checkAmountAndPrice(totalmoney,selectedItem!,selecteditemamount,selectemitemprice);
+                                        if(priceandamountenough == {true:true}){
+                                          
+                                        }
+                                      }, 
                                       child: const Center(child: Text('SELL',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
                                   )
                                 ],

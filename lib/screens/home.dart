@@ -96,6 +96,10 @@ class _HomeState extends State<Home> {
                     onPressed: ()async{
                       String traderoomid = '';
                       traderoomid = await DatabaseService().createTrade();
+                      print(traderoomid);
+                      traderoomid == null ? 
+                      const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,) 
+                      : 
                       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  CreateTrade(traderoomid:traderoomid)));
                     }, 
                     child: const Text('Create Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),

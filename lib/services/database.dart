@@ -24,6 +24,27 @@ class DatabaseService{
         'nickname':nickname,
       });
   }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Future<Map<bool,bool>> checkAmountAndPrice(String totalmoney,String selectedmyitem,String amount,String price)async{
+      bool temp1 = false;
+      bool temp2 = false;
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) async { 
+        
+        await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) { 
+            value.data()!.forEach((key, value) {
+              if(value.runtimeType == List<dynamic>){
+                for (var map in List<Map<String,dynamic>>.from(value)) {
+                  if(map.keys.first == selectedmyitem){
+                    int.parse(map.values.first['amount']) > int.parse(amount) ? temp1 = true : temp1 = false;
+                    int.parse(map.values.first['price']) > int.parse(totalmoney) ? temp2 = false : temp2 = true;
+                  }
+                }
+              }
+            });
+        });
+      });
+      return {temp1:temp2};
+  }
   Future<void> mynicknameFinder()async{
     await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
         nickname = value.data()!['nickname'].toString()
@@ -36,6 +57,13 @@ class DatabaseService{
         await traderoomsCollection.doc(doc.id).update({key: value});
       }
     } 
+  }
+  Future<String> checktotalMoney()async{
+    String totalmoney = "";
+    await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
+        totalmoney = value.data()!['totalmoney'].toString()
+    );
+    return totalmoney;
   }
   ////////////////////////////////////////////////////////ADD NEW CATEGORY TO ALL PRODUCTS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> addNewTopTab(String categoryname,String subcatname,String name,String price,String amount,String incdec,String percent)async{
@@ -102,9 +130,7 @@ class DatabaseService{
         }
       }
       for (var i = 0; i < data.length; i++) {//DIVIDES ALL ITEMS INTO CATEGORIES CLASS TO ITEM CLASS.
-        //if(data[i].keys.first == subcatname){
           maps.add({data[i].keys.first : data[i].values.first});
-        //}
       }
       if(mapsPro.any((map) => int.parse(Map<String,dynamic>.from(map.values.first)['amount'].toString()) < 1  && Map<String,dynamic>.from(map.values.first)['name'] == subcatname)){//ALLPROCTS ITEM THAT TRYING TO BUY IS LESS THAN 1 MYPRODUCTS ITEM                                //INCREASE AMOUNT OF MYPRODUCTS ITEM CANCELED BY DECREASING AMOUNT
       }                                                                                                                                                          //BY 1.
@@ -229,9 +255,7 @@ class DatabaseService{
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Future<String> createTrade()async{
       String id = (Random().nextInt(89999)+10000).toString();
-      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) => 
-      nickname = value.data()!['nickname'].toString()
-      );
+      await mynicknameFinder();
       await traderoomsCollection.doc(id).set({'tradesman1': nickname,'tradesman2':''});
       return id;
     }
@@ -322,6 +346,7 @@ class DatabaseService{
     //print(price);
     await mynicknameFinder();
     await addtoTradeAreaDB('selectedmyItemPrice', price);
+    await addtoTradeAreaDB('selectedmyItemAmount', selecteditemamount);
     return price;
   }
 }
