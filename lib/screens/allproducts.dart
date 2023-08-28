@@ -8,12 +8,7 @@ import 'package:zelix_trade/screens/myproducts.dart';
 import 'package:zelix_trade/services/database.dart';
 
 class AllProducts extends StatefulWidget {
-  final List<String>? allproductscategories;
-  List<Map<String,dynamic>>? fruits;
-  List<Map<String,dynamic>>? vegetables;
-  List<Map<String,dynamic>>? tools;
-  List<Map<String,dynamic>>? kitchen;
-  AllProducts({Key? key, this.allproductscategories,this.fruits,this.vegetables,this.tools,this.kitchen}) : super(key: key);
+  const AllProducts({super.key});
 
   @override
   State<AllProducts> createState() => _AllProductsState();
@@ -41,11 +36,6 @@ class _AllProductsState extends State<AllProducts> {
   
   @override
   void initState() {
-    vegslist = widget.vegetables!;
-    frutslist = widget.fruits!;
-    toolslist = widget.tools!;
-    kitchenslist = widget.kitchen!;
-    dropdownitems = widget.allproductscategories!;
     super.initState();
   }
   void resetDetails(int index,Map<String, dynamic> selection){
@@ -79,7 +69,7 @@ class _AllProductsState extends State<AllProducts> {
       onTapButton:selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? null : ()async{
         if(int.parse(textprice) > int.parse(selection['price'])){
               await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AllProducts(allproductscategories: widget.allproductscategories,fruits: widget.fruits, vegetables: widget.vegetables, tools: widget.tools, kitchen: widget.kitchen))); })
+              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts())); })
                );
               setState(() { });
         }

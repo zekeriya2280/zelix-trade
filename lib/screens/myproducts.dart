@@ -303,7 +303,7 @@ class _MyProductsState extends State<MyProducts> {
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => AllProducts()));
+                                builder: (context) => const AllProducts()));
                       },
                     )),
                 Padding(

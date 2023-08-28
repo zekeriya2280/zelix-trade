@@ -1,7 +1,8 @@
-import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/wrapper.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/myproducts.dart';
@@ -30,30 +31,15 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     deleteMyTradeArea();
-    readFromallproductsjson();
+    supabase();
     super.initState();
   }
   void deleteMyTradeArea()async {
     await DatabaseService().clearLastRoomIfIJoiner();  
   } 
-  readFromallproductsjson()async{
-    String data = await DefaultAssetBundle.of(context).loadString("assets/jsons/allproducts.json");
-    final Map<String,dynamic> jsonResult = jsonDecode(data);
-    for (var cat in jsonResult.keys) { 
-      allproductscategories.add(cat);
-    }
-    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[0]).length; i++) {//fruits
-      fruits.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[0])[i]);
-    }
-    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[1]).length; i++) {//vegetables
-      vegetables.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[1])[i]);
-    }
-    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[2]).length; i++) {//tools
-      tools.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[2])[i]);
-    }
-    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[3]).length; i++) {//kitchen
-      kitchen.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[3])[i]);
-    }
+  void supabase()async {
+    //print(Supabase.instance.client.from('allproducts').insert({'products':{'fruits':'apple'}}).then((value) => value));
+    await Supabase.instance.client.from('allproducts2').insert({'fruits':{'apple':{'name':'apple','price':'1000'}}}) ; 
   }
   @override
   Widget build(BuildContext context) {
@@ -67,7 +53,7 @@ class _HomeState extends State<Home> {
             child: IconButton(
               icon: const Icon(Icons.list,color: Colors.white,size: 25,),
               onPressed: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AllProducts(allproductscategories : allproductscategories, fruits: fruits, vegetables: vegetables, tools: tools, kitchen: kitchen)));
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts()));
               }
             )),
             Padding(padding: const EdgeInsets.symmetric(vertical:5),

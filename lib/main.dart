@@ -1,10 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/wrapper.dart';
 
 void main()async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await Supabase.initialize(
+    url: 'https://zyjdrykvislgcocgsucx.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5amRyeWt2aXNsZ2NvY2dzdWN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTMyMjc4OTEsImV4cCI6MjAwODgwMzg5MX0.22hLUWUvEnVud6G6nymJXbe43yga7Uv1tQl6iMgmIHo',
+  );
   runApp(const MyApp());
 }
 
