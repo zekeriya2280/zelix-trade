@@ -45,7 +45,7 @@ class _TradeAreaState extends State<TradeArea> {
 
   @override
   void initState() {
-    checktotalMoney();
+    
     super.initState();
   }
   void resetDetails(int index, Map<String, dynamic> selection) {
@@ -55,10 +55,7 @@ class _TradeAreaState extends State<TradeArea> {
     });
   }
   void checktotalMoney()async{
-    setState(() async {
-      totalmoney = await DatabaseService().checktotalMoney();
-    });
-    
+    totalmoney = await DatabaseService().checktotalMoney();
   }
   void productDetails(int index, Map<String, dynamic> selection)async {
     WidgetsBinding.instance.addPostFrameCallback((_)  {
@@ -434,6 +431,9 @@ class _TradeAreaState extends State<TradeArea> {
      priceandamountenough = await DatabaseService().checkAmountAndPrice(totalmoney,selectedmyitem,amount,price);
     });
   }
+  void moveToSelectedItemAmountToPartner(String selectedmyitem,String selectedmyItemAmount)async{
+    await DatabaseService().moveToSelectedItemAmountToPartner(selectedmyitem,selectedmyItemAmount).then((value) {});
+  }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
@@ -483,6 +483,7 @@ class _TradeAreaState extends State<TradeArea> {
               if(!tradeareasnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
 
               iambuilder = iambuilderFinderFN(tradeareasnapshot,userssnapshot);
+              checktotalMoney();
               categoryGetter('alllist');
               categoryGetterPartner('alllist');
               allmylistLength = allmylistLengthFN(); 
@@ -590,6 +591,7 @@ class _TradeAreaState extends State<TradeArea> {
                                       ),
                                       onPressed:selectedItem == '' || selectedItem == 'Select' ? null : (){
                                         checkAmountAndPrice(totalmoney,selectedItem!,selecteditemamount,selectemitemprice);
+                                        moveToSelectedItemAmountToPartner(selectedItem!,selecteditemamount);
                                         if(priceandamountenough == {true:true}){
                                           
                                         }

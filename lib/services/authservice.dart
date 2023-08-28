@@ -47,10 +47,12 @@ Future signInWithEmailAndPassword(String email,String password)async{
   }
  }
   Future registerWithEmailAndPassword(String name,String email,String password)async{
+    
   try {
     UserCredential result = await auth.createUserWithEmailAndPassword(email: email,password: password);
+    print(result);
     User? user = result.user;
-    //print(user);
+    
      await DatabaseService().setUserData(name,email,password);
      print('B');
      return userFromFirebaseUser(user);

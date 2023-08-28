@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class DatabaseService{
    DatabaseService();
    String nickname = '';
+  
   final CollectionReference<Map<String, dynamic>> usersCollection = FirebaseFirestore.instance.collection('users');
   final CollectionReference<Map<String, dynamic>> productionsCollection = FirebaseFirestore.instance.collection('productions');
   final CollectionReference<Map<String, dynamic>> traderoomsCollection = FirebaseFirestore.instance.collection('traderooms');
@@ -256,6 +257,7 @@ class DatabaseService{
     Future<String> createTrade()async{
       String id = (Random().nextInt(89999)+10000).toString();
       await mynicknameFinder();
+      print(id);
       await traderoomsCollection.doc(id).set({'tradesman1': nickname,'tradesman2':''});
       return id;
     }
@@ -327,9 +329,9 @@ class DatabaseService{
    Future<String> selectMyItemPrice(String selectedmyitem,String selecteditemamount)async{
     String price = '';
     await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) { 
-        value.data()!.forEach((key, value) {
-          if(value.runtimeType == List<dynamic>){
-            for (var map in List<Map<String,dynamic>>.from(value)) {
+        value.data()!.forEach((key, dynamicvalue) {
+          if(dynamicvalue.runtimeType == List<dynamic>){
+            for (var map in List<Map<String,dynamic>>.from(dynamicvalue)) {
               if(map.keys.first == selectedmyitem){
                 price = map.values.first['price'];
               }
@@ -348,5 +350,29 @@ class DatabaseService{
     await addtoTradeAreaDB('selectedmyItemPrice', price);
     await addtoTradeAreaDB('selectedmyItemAmount', selecteditemamount);
     return price;
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Future<void> moveToSelectedItemAmountToPartner(String selectedmyitem,String selectedmyItemAmount)async{
+    List<Map<String,List<Map<String,dynamic>>>> allMaps = [];
+    List<Map<String,dynamic>> maps = [];
+    await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) { 
+        value.data()!.forEach((categoryname, dynamicvalue) {// 'fruits: []
+          if(dynamicvalue.runtimeType == List<dynamic>){
+            for (var map in List<Map<String,dynamic>>.from(dynamicvalue)) { //{apple:{}}
+              if(map.keys.first == selectedmyitem){
+                  final pros = value.data()![categoryname];
+                  for (var i = 0; i < pros.length; i++) {
+                    pros[i].values.first['amount'] - selectedmyItemAmount;
+                    maps.add({pros[i].keys.first : pros[i].values.first});
+                  }
+                  allMaps.add({categoryname : maps});
+              }
+            }
+          }
+        });
+    });
+    for (var i = 0; i < allMaps.length; i++) {
+      await usersCollection.doc(FirebaseAuth.instance.currentUser!.uid).update(allMaps[i]);
+    }
   }
 }

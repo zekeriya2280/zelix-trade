@@ -16,6 +16,7 @@ dependencies:
   firebase_auth: ^4.8.0
   feature_notifier: ^1.0.6
   clipboard: ^0.1.3
+  firebase_database: ^10.2.5
 
 dev_dependencies:
   flutter_test:
@@ -37,6 +38,8 @@ flutter:
     - assets/images/glass.png
     - assets/images/plastic.png
     - assets/images/spoon.png
+    - assets/jsons/allproducts.json
+
   # fonts:
   #   - family: Schyler
   #     fonts:

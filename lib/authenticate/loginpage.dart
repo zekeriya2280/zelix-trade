@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zelix_trade/authenticate/signup.dart';
+import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/authservice.dart';
 
 class LoginPage extends StatefulWidget {
@@ -149,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: MaterialButton(
                         minWidth: double.infinity,
                         height:70,
-                        onPressed: (){
+                        onPressed: ()async{
                           if(_formkey.currentState!.validate()){
                             dynamic result = auth.signInWithEmailAndPassword(email, password);
                                 if(result == null){
@@ -157,7 +158,9 @@ class _LoginPageState extends State<LoginPage> {
                                     error = 'Check your credentials!';
                                   });
                                 }
-                                print('loginnn');
+                                else{
+                                 await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Home()));
+                                }
                           }
                         },
                         color: const Color.fromARGB(255, 17, 199, 219),

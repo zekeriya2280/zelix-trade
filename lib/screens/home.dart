@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,15 +21,40 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   double height = 0;
   double width = 0;
+  List<String> allproductscategories = [];
+  List<Map<String,dynamic>> fruits = [];
+  List<Map<String,dynamic>> vegetables = [];
+  List<Map<String,dynamic>> tools = [];
+  List<Map<String,dynamic>> kitchen = [];
   final AuthService auth = AuthService(); 
   @override
   void initState() {
     deleteMyTradeArea();
+    readFromallproductsjson();
     super.initState();
   }
   void deleteMyTradeArea()async {
     await DatabaseService().clearLastRoomIfIJoiner();  
-  }  
+  } 
+  readFromallproductsjson()async{
+    String data = await DefaultAssetBundle.of(context).loadString("assets/jsons/allproducts.json");
+    final Map<String,dynamic> jsonResult = jsonDecode(data);
+    for (var cat in jsonResult.keys) { 
+      allproductscategories.add(cat);
+    }
+    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[0]).length; i++) {//fruits
+      fruits.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[0])[i]);
+    }
+    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[1]).length; i++) {//vegetables
+      vegetables.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[1])[i]);
+    }
+    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[2]).length; i++) {//tools
+      tools.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[2])[i]);
+    }
+    for (var i = 0; i < List<dynamic>.from(List<dynamic>.from(jsonResult.values)[3]).length; i++) {//kitchen
+      kitchen.add(List<dynamic>.from(List<dynamic>.from(jsonResult.values)[3])[i]);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
@@ -41,7 +67,7 @@ class _HomeState extends State<Home> {
             child: IconButton(
               icon: const Icon(Icons.list,color: Colors.white,size: 25,),
               onPressed: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts()));
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AllProducts(allproductscategories : allproductscategories, fruits: fruits, vegetables: vegetables, tools: tools, kitchen: kitchen)));
               }
             )),
             Padding(padding: const EdgeInsets.symmetric(vertical:5),
