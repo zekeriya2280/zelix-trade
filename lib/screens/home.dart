@@ -1,7 +1,7 @@
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/wrapper.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/myproducts.dart';
@@ -29,15 +29,14 @@ class _HomeState extends State<Home> {
   final AuthService auth = AuthService(); 
   @override
   void initState() {
-    deleteMyTradeArea();
+    //deleteMyTradeArea();
     supabase();
     super.initState();
   }
-  void deleteMyTradeArea()async {
-    await DatabaseService().clearLastRoomIfIJoiner();  
-  } 
+  //void deleteMyTradeArea()async {
+  //  await DatabaseService().clearLastRoomIfIJoiner();  
+  //} 
   void supabase()async{
-    
     //print(Supabase.instance.client.from('allproducts').insert({'products':{'fruits':'apple'}}).then((value) => value));
     //await Supabase.instance.client.from('allproducts2').insert({'item':'fruits'});
     //await Supabase.instance.client.from('allproducts2').insert({'id':5,'item': 'tools','itemmap': {'pliers':{'name':'pliers','price':'1000','amount':'40','incdec':'dec','percent':'0.0'}} });
@@ -71,9 +70,11 @@ class _HomeState extends State<Home> {
             Padding(padding: const EdgeInsets.all(10),
               child: Center(child: 
                            GestureDetector(
-                               onTap: ()async{ await auth.signOut();
-                               if(FirebaseAuth.instance.currentUser == null){
-                                 await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Wrapper()));
+                               onTap: ()async{ 
+                                //await auth.signOut();
+                               await Supabase.instance.client.auth.signOut();
+                               if(Supabase.instance.client.auth.currentUser == null){
+                                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Wrapper()));
                                }
                                },
                                child: const Icon(Icons.logout,color: Colors.red,)),),),
@@ -89,92 +90,97 @@ class _HomeState extends State<Home> {
                         ),
               )),
         ),
-        body:Stack(
-      children: [
-         const Image(image: AssetImage('assets/images/tradebg.png'),fit: BoxFit.cover,),
-         Center(
-          
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const Expanded(flex: 2, child: Text('')),
-              Container(
-                height: 100,
-                width: width/1.3,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.orangeAccent
-                  ),
-                  child: ElevatedButton(
-                    style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
-                    ),
-                    onPressed: ()async{
-                      String traderoomid = '';
-                      traderoomid = await DatabaseService().createTrade();
-                      print(traderoomid);
-                      traderoomid == null ? 
-                      const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,) 
-                      : 
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  CreateTrade(traderoomid:traderoomid)));
-                    }, 
-                    child: const Text('Create Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),
-              const SizedBox(height: 30,),
-              Container(
-                height: 100,
-                width: width/1.3,
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.orangeAccent
-                  ),
-                  child: ElevatedButton(
-                    style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
-                    ),
-                    onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const JoinTrade()));}, 
-                    child: const Text('Join A Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),
-              const SizedBox(height: 30,),
-              Container(
-                height: 100,
-                width: width/1.3,
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.orangeAccent
-                  ),
-                  child: ElevatedButton(
-                    style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
-                    ),
-                    onPressed: (){
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Options()));
-                  }, 
-                  child: const Text('Options', style: TextStyle(fontSize: 30,color:Colors.white)))),
-              const SizedBox(height: 30,),
-              Container(
-                height: 100,
-                width: width/1.3,
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.orangeAccent
-                  ),
-                  child: ElevatedButton(
-                    style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
-                    ),
-                    onPressed: (){
-                      SystemNavigator.pop();
-                  },
-                    child: const Text('Quit', style: TextStyle(fontSize: 30,color:Colors.white)))),
-              const Expanded(flex: 4, child: Text('')),
-            ],
+        body:SingleChildScrollView(
+          child: SizedBox(
+            height: height,
+            child: Stack(
+                children: [
+             const Image(image: AssetImage('assets/images/tradebg.png'),fit: BoxFit.cover,),
+             Center(
+              
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  const Expanded(flex: 2, child: Text('')),
+                  Container(
+                    height: 100,
+                    width: width/1.3,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(30),
+                        color: Colors.orangeAccent
+                      ),
+                      child: ElevatedButton(
+                        style: const ButtonStyle(
+                          backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
+                        ),
+                        onPressed: ()async{
+                          String traderoomid = '';
+                          traderoomid = await DatabaseService().createTrade();
+                          print(traderoomid);
+                          traderoomid == null ? 
+                          const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,) 
+                          : 
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  CreateTrade(traderoomid:traderoomid)));
+                        }, 
+                        child: const Text('Create Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),
+                  const SizedBox(height: 30,),
+                  Container(
+                    height: 100,
+                    width: width/1.3,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(30),
+                        color: Colors.orangeAccent
+                      ),
+                      child: ElevatedButton(
+                        style: const ButtonStyle(
+                          backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
+                        ),
+                        onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const JoinTrade()));}, 
+                        child: const Text('Join A Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),
+                  const SizedBox(height: 30,),
+                  Container(
+                    height: 100,
+                    width: width/1.3,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(30),
+                        color: Colors.orangeAccent
+                      ),
+                      child: ElevatedButton(
+                        style: const ButtonStyle(
+                          backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
+                        ),
+                        onPressed: (){
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Options()));
+                      }, 
+                      child: const Text('Options', style: TextStyle(fontSize: 30,color:Colors.white)))),
+                  const SizedBox(height: 30,),
+                  Container(
+                    height: 100,
+                    width: width/1.3,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(30),
+                        color: Colors.orangeAccent
+                      ),
+                      child: ElevatedButton(
+                        style: const ButtonStyle(
+                          backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
+                        ),
+                        onPressed: (){
+                          SystemNavigator.pop();
+                      },
+                        child: const Text('Quit', style: TextStyle(fontSize: 30,color:Colors.white)))),
+                  const Expanded(flex: 4, child: Text('')),
+                ],
+              ),
+            ),
+                ]
+                ),
           ),
         ),
-      ]
-      ),
     );
   }
 }

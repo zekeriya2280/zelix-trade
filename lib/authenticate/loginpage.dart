@@ -162,7 +162,8 @@ class _LoginPageState extends State<LoginPage> {
                            //     else{
                            //      await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Home()));
                            //     }
-                           await Supabase.instance.client.auth.signInWithOtp(email: email);
+                           await Supabase.instance.client.auth.signInWithPassword(email: email,password: password);
+                           await Supabase.instance.client.auth.updateUser(UserAttributes(password: password));
                            //if(result == null){
                            //   setState(() {
                            //     error = 'Check your credentials!';

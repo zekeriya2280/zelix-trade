@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zelix_trade/screens/home.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({ Key? key }) : super(key: key);
@@ -105,15 +106,23 @@ class _IntroPageState extends State<IntroPage> {
                             //       await DatabaseService().setNickname(nickname);
                             //       await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
                             //     }
-                            final lastid = await Supabase.instance.client.from('users').select().gt('id', 0);
-                            print(lastid);
-                            if(lastid == null){
-                              await Supabase.instance.client.from('users').insert({'id':0});
-                            }
-                            else{
-                              List<int>.from(lastid).sort();
-                              await Supabase.instance.client.from('users').insert({'id':(List<int>.from(lastid)[0]+1)});
-                            }
+                            Supabase.instance.client.auth.currentUser!.userMetadata!.addAll({'nickname':nickname,'totalmoney': '5000'});
+                            await Supabase.instance.client.auth.updateUser(UserAttributes(data: Supabase.instance.client.auth.currentUser!.userMetadata!));
+                            await Supabase.instance.client.from('users').insert({'id':1,'name':nickname,'email': Supabase.instance.client.auth.currentUser!.email,'password': Supabase.instance.client.auth.currentUser!.userMetadata!['password'], 'totalmoney': '5000'});
+                            
+                            await Future.delayed(const Duration(seconds: 1),(){
+                              const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));
+                            });
+                            await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
+                           //List<Map<String, dynamic>> lastid = await Supabase.instance.client.from('users').select<PostgrestList>('id');
+                           //print(lastid);
+                           //if(lastid == null || lastid == []){
+                           //  await Supabase.instance.client.from('users').insert({'id':0});
+                           //}
+                           //else{
+                           //  lastid.sort();
+                           //  await Supabase.instance.client.from('users').insert({'id':1,'name':lastid[0]['name'],'email': lastid[0]['email'],'password': lastid[0]['password']});
+                           //}
                             
                       },
                       style: ButtonStyle(

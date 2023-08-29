@@ -208,7 +208,7 @@ class _SignupPageState extends State<SignupPage> {
                                //  await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const IntroPage()));
                                // }
 
-                                AuthResponse result = await Supabase.instance.client.auth.signUp(email: email, password: password);
+                              AuthResponse result = await Supabase.instance.client.auth.signUp(email: email, password: password);
                                 if(result == null){
                                    setState(() {
                                      error = 'Check your credentials!';
@@ -219,6 +219,7 @@ class _SignupPageState extends State<SignupPage> {
                                    );
                                  }
                                  else{
+                                 await Supabase.instance.client.auth.updateUser(UserAttributes(data: {'password': password}));
                                  await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const IntroPage()));
                                 }
                               }
