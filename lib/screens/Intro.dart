@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zelix_trade/screens/home.dart';
-import 'package:zelix_trade/services/database.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({ Key? key }) : super(key: key);
@@ -85,27 +84,37 @@ class _IntroPageState extends State<IntroPage> {
                     Container(
                       margin: const EdgeInsets.all(8),
                       child: ElevatedButton(onPressed: ()async{
-                                if(snapshot.data!.docs == []){
-                                  print('a');
-                                   setState(() {
-                                    takennicknameerror = '';
-                                  });
-                                  Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
-                                }
-                                 else if(snapshot.data!.docs.any((e) => e.data().values.any((v) => v == nickname || nickname == ''))){
-                                    print('b');
-                                   setState(() {
-                                     takennicknameerror = 'Enter a valid nickname';
-                                   });
-                                   
-                                 }
-                                 else{
-                                    setState(() {
-                                     takennicknameerror = '';
-                                   });
-                                   await DatabaseService().setNickname(nickname);
-                                   await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
-                                 }
+                            //    if(snapshot.data!.docs == []){
+                            //      print('a');
+                            //       setState(() {
+                            //        takennicknameerror = '';
+                            //      });
+                            //      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
+                            //    }
+                            //     else if(snapshot.data!.docs.any((e) => e.data().values.any((v) => v == nickname || nickname == ''))){
+                            //        print('b');
+                            //       setState(() {
+                            //         takennicknameerror = 'Enter a valid nickname';
+                            //       });
+                            //       
+                            //     }
+                            //     else{
+                            //        setState(() {
+                            //         takennicknameerror = '';
+                            //       });
+                            //       await DatabaseService().setNickname(nickname);
+                            //       await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
+                            //     }
+                            final lastid = await Supabase.instance.client.from('users').select().gt('id', 0);
+                            print(lastid);
+                            if(lastid == null){
+                              await Supabase.instance.client.from('users').insert({'id':0});
+                            }
+                            else{
+                              List<int>.from(lastid).sort();
+                              await Supabase.instance.client.from('users').insert({'id':(List<int>.from(lastid)[0]+1)});
+                            }
+                            
                       },
                       style: ButtonStyle(
                         shadowColor: MaterialStateProperty.all<Color>(Colors.white38),

@@ -2,7 +2,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/wrapper.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/myproducts.dart';
@@ -37,9 +36,15 @@ class _HomeState extends State<Home> {
   void deleteMyTradeArea()async {
     await DatabaseService().clearLastRoomIfIJoiner();  
   } 
-  void supabase()async {
+  void supabase()async{
+    
     //print(Supabase.instance.client.from('allproducts').insert({'products':{'fruits':'apple'}}).then((value) => value));
-    await Supabase.instance.client.from('allproducts2').insert({'fruits':{'apple':{'name':'apple','price':'1000'}}}) ; 
+    //await Supabase.instance.client.from('allproducts2').insert({'item':'fruits'});
+    //await Supabase.instance.client.from('allproducts2').insert({'id':5,'item': 'tools','itemmap': {'pliers':{'name':'pliers','price':'1000','amount':'40','incdec':'dec','percent':'0.0'}} });
+    //await Supabase.instance.client.from('allproducts2').insert({'id':6,'item': 'tools','itemmap': {'hammer':{'name':'hammer','price':'1500','amount':'30','incdec':'inc','percent':'0.0'}} });
+    //await Supabase.instance.client.from('allproducts2').insert({'id':7,'item': 'kitchen','itemmap': {'plastic':{'name':'plastic','price':'1000','amount':'40','incdec':'dec','percent':'0.0'}} }); 
+    //await Supabase.instance.client.from('allproducts2').insert({'id':8,'item': 'kitchen','itemmap': {'spoon':{'name':'spoon','price':'1500','amount':'30','incdec':'inc','percent':'0.0'}} }); 
+    //await Supabase.instance.client.from('allproducts2').insert({'id':9,'item': 'kitchen','itemmap': {'glass':{'name':'glass','price':'1500','amount':'30','incdec':'inc','percent':'0.0'}} }); 
   }
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/loginpage.dart';
 import 'package:zelix_trade/screens/Intro.dart';
 import 'package:zelix_trade/services/authservice.dart';
@@ -193,17 +194,31 @@ class _SignupPageState extends State<SignupPage> {
                             height:60,
                             onPressed: ()async{
                               if(_formkey.currentState!.validate()){
-                                dynamic result = await auth.registerWithEmailAndPassword(name, email, password);
+                               // dynamic result = await auth.registerWithEmailAndPassword(name, email, password);
+                               // if(result == null){
+                               //   setState(() {
+                               //     error = 'Check your credentials!';
+                               //   });
+                               //   const CircularProgressIndicator(
+                               //     color: Colors.red,
+                               //     strokeWidth: 10,
+                               //   );
+                               // }
+                               // else{
+                               //  await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const IntroPage()));
+                               // }
+
+                                AuthResponse result = await Supabase.instance.client.auth.signUp(email: email, password: password);
                                 if(result == null){
-                                  setState(() {
-                                    error = 'Check your credentials!';
-                                  });
-                                  const CircularProgressIndicator(
-                                    color: Colors.red,
-                                    strokeWidth: 10,
-                                  );
-                                }
-                                else{
+                                   setState(() {
+                                     error = 'Check your credentials!';
+                                   });
+                                   const CircularProgressIndicator(
+                                     color: Colors.red,
+                                     strokeWidth: 10,
+                                   );
+                                 }
+                                 else{
                                  await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const IntroPage()));
                                 }
                               }

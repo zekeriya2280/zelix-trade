@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/signup.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/authservice.dart';
@@ -152,15 +153,28 @@ class _LoginPageState extends State<LoginPage> {
                         height:70,
                         onPressed: ()async{
                           if(_formkey.currentState!.validate()){
-                            dynamic result = auth.signInWithEmailAndPassword(email, password);
-                                if(result == null){
-                                  setState(() {
-                                    error = 'Check your credentials!';
-                                  });
-                                }
-                                else{
-                                 await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Home()));
-                                }
+                           // dynamic result = auth.signInWithEmailAndPassword(email, password);
+                           //     if(result == null){
+                           //       setState(() {
+                           //         error = 'Check your credentials!';
+                           //       });
+                           //     }
+                           //     else{
+                           //      await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Home()));
+                           //     }
+                           await Supabase.instance.client.auth.signInWithOtp(email: email);
+                           //if(result == null){
+                           //   setState(() {
+                           //     error = 'Check your credentials!';
+                           //   });
+                           //   const CircularProgressIndicator(
+                           //     color: Colors.red,
+                           //     strokeWidth: 10,
+                           //   );
+                           // }
+                           // else{
+                            await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const Home()));
+                          // }
                           }
                         },
                         color: const Color.fromARGB(255, 17, 199, 219),
