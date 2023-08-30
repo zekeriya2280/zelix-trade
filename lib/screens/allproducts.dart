@@ -1,11 +1,9 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/screens/myproducts.dart';
-import 'package:zelix_trade/services/database.dart';
 
 class AllProducts extends StatefulWidget {
   const AllProducts({super.key});
@@ -18,10 +16,11 @@ class _AllProductsState extends State<AllProducts> {
   double height = 0;
   double width = 0;
   int proditemcount = 0;
-  String textprice = '';
+  int totalmoney = 0;
   String youhade = '';
   bool breaker = true;
-  String currenttoptab = 'vegetables';
+  String currenttoptab = 'fruits';
+  List<Map<String,dynamic>> currentamounts = [];
   List<Map<String,dynamic>> vegslist = [];
   List<Map<String,dynamic>> frutslist = [];
   List<Map<String,dynamic>> toolslist = [];
@@ -30,15 +29,58 @@ class _AllProductsState extends State<AllProducts> {
   List<String> frus = [];
   List<String> tols = [];
   List<String> kitchens = [];
-  List<String> dropdownitems = [];
+  List<String> dropdownitems = ['fruits'];
   CollectionReference<Map<String, dynamic>> products= FirebaseFirestore.instance.collection('productions');
   CollectionReference<Map<String, dynamic>> users= FirebaseFirestore.instance.collection('users');
   
   @override
   void initState() {
+    getallLists();
+    //resetTotalmoney();
     super.initState();
   }
-  void resetDetails(int index,Map<String, dynamic> selection){
+  resetTotalmoney()async {
+    //'id':1,'name': 'zek','email': 'z@g.com','password': '123456',
+    await Supabase.instance.client.from('users').update({'totalmoney':50000}).eq('id', 1);
+  }
+  getallLists(){
+    Supabase.instance.client.from('allproducts').stream(primaryKey: ['id']).listen((event) async {
+      event.sort((a,b)=>a['id'].compareTo(b['id'])); 
+      
+        for (var map in event) { 
+          //print(map.values);
+          for (var i = 0; i < map.values.length; i++) {
+            if(List<dynamic>.from(map.values)[i] == 'fruits'){
+              setState(() {
+                frutslist.add({'name' : List<dynamic>.from(map.values)[2], 'price' : List<dynamic>.from(map.values)[3], 'amount' : List<dynamic>.from(map.values)[4], 'incdec' : List<dynamic>.from(map.values)[5], 'percent' : List<dynamic>.from(map.values)[6]});
+              });
+            }else if(List<dynamic>.from(map.values)[i] == 'vegetables'){
+              setState(() {
+                vegslist.add({'name' : List<dynamic>.from(map.values)[2], 'price' : List<dynamic>.from(map.values)[3], 'amount' : List<dynamic>.from(map.values)[4], 'incdec' : List<dynamic>.from(map.values)[5], 'percent' : List<dynamic>.from(map.values)[6]});
+              });
+            }else if(List<dynamic>.from(map.values)[i] == 'tools'){
+              setState(() {
+                toolslist.add({'name' : List<dynamic>.from(map.values)[2], 'price' : List<dynamic>.from(map.values)[3], 'amount' : List<dynamic>.from(map.values)[4], 'incdec' : List<dynamic>.from(map.values)[5], 'percent' : List<dynamic>.from(map.values)[6]});
+              });
+            }else if(List<dynamic>.from(map.values)[i] == 'kitchen'){
+              setState(() {
+                kitchenslist.add({'name' : List<dynamic>.from(map.values)[2], 'price' : List<dynamic>.from(map.values)[3], 'amount' : List<dynamic>.from(map.values)[4], 'incdec' : List<dynamic>.from(map.values)[5], 'percent' : List<dynamic>.from(map.values)[6]});
+              });
+            }
+            List<dynamic> categories = await Supabase.instance.client.from('allproducts').select<List>('category').then((value) => value);
+            //print(categories);
+            for (var i = 0; i < categories.length; i++) {
+              dropdownitems.add(Map<String,dynamic>.from(categories[i]).values.first);
+            }
+          }
+        }
+     });
+  }
+  Future<int> getTotalMoney()async{
+    //print(Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0]));
+      return await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0].values.first);
+  }
+  void resetDetails(int index,Map<String, dynamic> selection,String currenttoptab){
     setState(() {
         FeatureNotifier.persistAll();
         productDetails(index,selection);
@@ -65,23 +107,70 @@ class _AllProductsState extends State<AllProducts> {
       descriptionColor: Colors.white,
       descriptionFontSize: 20,
       backgroundColor: Colors.white54,
-      buttonBackgroundColor: selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? Colors.grey : Colors.green,
-      onTapButton:selection['amount'] == '0' || int.parse(textprice) < int.parse(selection['price']) ? null : ()async{
-        if(int.parse(textprice) > int.parse(selection['price'])){
-              await DatabaseService().addNewItemGivenCatagoryToMyProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AllProducts())); })
-               );
-              setState(() { });
+      buttonBackgroundColor: selection['amount'] == '0' || totalmoney <selection['price'] ? Colors.grey : Colors.green,
+      onTapButton:selection['amount'] == '0' || totalmoney < selection['price'] ? null : ()async{
+        if(totalmoney >= selection['price']){
+          int newprice = selection['price'] + (double.parse((selection['price'] * selection['percent']).toString())/100).floor();
+          int newamountforAllProducts = selection['amount']  - 1;
+          int newamountforme = 1;
+          List<Map<String,dynamic>> lastamountforme = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('amount').eq('name', selection['name']).then((value) => value);
+          if(lastamountforme == [] || lastamountforme.isEmpty){
+            newamountforme = 1;
+          }
+          else{
+            newamountforme  = int.parse(lastamountforme[0].values.first.toString()) + 1;
+          }
+          double newpercent = selection['percent'] + 0.5;
+          String newincdec = 'inc';
+          int lastid = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('id').then(
+            
+            (value) {
+              
+              if(value == []) { 
+                return 0; 
+              }
+              else{ 
+                //value.sort(); 
+                return List<Map<String,dynamic>>.from(value).last['id'];
+              }
+            }
+          );
+          
+          List<Map<String,dynamic>> itemnames = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('name').then((value) => value);
+         
+          if(itemnames.any((itemmap) => itemmap.values.first == selection['name'])){
+            List<Map<String,dynamic>> idmap = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('id').eq('name', selection['name']).then((value) => value);
+            await Supabase.instance.client.from('boughtProducts').update({'category': currenttoptab,
+                                                                          'name':selection['name'],
+                                                                          'price': newprice,
+                                                                          'amount':newamountforme,
+                                                                          'incdec':newincdec,
+                                                                          'percent':newpercent})
+                                                                          .eq('name', selection['name'])
+                                                                          .eq('owner', Supabase.instance.client.auth.currentUser!.email);
+          }
+          else{
+            await Supabase.instance.client.from('boughtProducts').insert({'id':lastid+1,'owner': Supabase.instance.client.auth.currentUser!.email,'category': currenttoptab,'name':selection['name'],'price': newprice,'amount':1,'incdec':newincdec,'percent':newpercent});
+          }
+          await Supabase.instance.client.from('allproducts').update({'price': newprice}).eq('name', selection['name']);
+          await Supabase.instance.client.from('allproducts').update({'percent': newpercent}).eq('name', selection['name']);
+          await Supabase.instance.client.from('allproducts').update({'amount': newamountforAllProducts}).eq('name', selection['name']);
+          await Supabase.instance.client.from('allproducts').update({'incdec': newincdec}).eq('name', selection['name']);
+          
+          await Supabase.instance.client.from('users').update({'totalmoney': (totalmoney - selection['price'])}).eq('email', Supabase.instance.client.auth.currentUser!.email).then(
+          (value) => setState(() { Navigator.push(context, MaterialPageRoute(builder: (context) => const AllProducts())); })
+           );
         }
       }
     );
   });
   }
-  buildProductItems(int index,Map<String, dynamic> taboption){
-    Map<String,dynamic> selection = taboption[taboption.keys.first];
+  buildProductItems(int index,Map<String, dynamic> selection,String currenttoptab) {
+    //print(taboption.keys.first);
+    //print(selection['price'].runtimeType);
     return GestureDetector(
       onTap: ()=>setState(() {
-         resetDetails(index,selection);
+         resetDetails(index,selection,currenttoptab);
       }),
       child: SizedBox(
         height: 150,
@@ -90,7 +179,7 @@ class _AllProductsState extends State<AllProducts> {
           child: ListTile(
             leading: SizedBox(
               height: 150,
-              child: Image(height: 100,width: 70,image: AssetImage('assets/images/${selection['name']}.png')
+              child: Image(height: 100,width: 70,image: AssetImage('assets/images/${selection['name'] == '1' || selection['name'] == 1 ? 'apple' : selection['name']}.png')
               )
             ),
             title: SizedBox(
@@ -148,88 +237,40 @@ class _AllProductsState extends State<AllProducts> {
       ),
     );
   }
-  FutureOr<void> categoryGetter(String list)async{
-    if(list == 'vegslist'){
-      final result = await DatabaseService().getFromFirebaseCategories('vegetables');
-      setState(() {
-        vegslist = result;
-      });
-    }else if(list == 'frutslist'){
-      final result = await DatabaseService().getFromFirebaseCategories('fruits');
-      setState(() {
-        frutslist = result;
-      });
-    }else if(list == 'toolslist'){
-      final result = await DatabaseService().getFromFirebaseCategories('tools');
-      setState(() {
-        toolslist = result;
-      });
-    }else if(list == 'kitchenslist'){
-      final result = await DatabaseService().getFromFirebaseCategories('kitchen');
-      setState(() {
-        kitchenslist = result;
-      });
-    }
-  }
+ //FutureOr<void> categoryGetter(String list)async{
+ //  if(list == 'vegslist'){
+ //    final result = await DatabaseService().getFromFirebaseCategories('vegetables');
+ //    setState(() {
+ //      vegslist = result;
+ //    });
+ //  }else if(list == 'frutslist'){
+ //    final result = await DatabaseService().getFromFirebaseCategories('fruits');
+ //    setState(() {
+ //      frutslist = result;
+ //    });
+ //  }else if(list == 'toolslist'){
+ //    final result = await DatabaseService().getFromFirebaseCategories('tools');
+ //    setState(() {
+ //      toolslist = result;
+ //    });
+ //  }else if(list == 'kitchenslist'){
+ //    final result = await DatabaseService().getFromFirebaseCategories('kitchen');
+ //    setState(() {
+ //      kitchenslist = result;
+ //    });
+ //  }
+ //}
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: products.snapshots(),
-      builder: (context, snapshot){
-        if(!snapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-          if (currenttoptab == 'vegetables') {
-              categoryGetter('vegslist');
-          } else if (currenttoptab == 'fruits'){
-              categoryGetter('frutslist');
-          }
-          else if (currenttoptab == 'tools'){
-            categoryGetter('toolslist');
-          }
-          else if (currenttoptab == 'kitchen'){
-            categoryGetter('kitchenslist');
-          }
-          for (var doc in snapshot.data!.docs) {
-              if (breaker) {
-                 if (doc.data()['vegetables'] != null) {
-                   for (var i = 0; i < doc.data()['vegetables'].length; i++) {
-                     vegis.add(doc.data()['vegetables'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['fruits'] != null) {
-                   for (var i = 0; i < doc.data()['fruits'].length; i++) {
-                     frus.add(doc.data()['fruits'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['tools'] != null) {
-                   for (var i = 0; i < doc.data()['tools'].length; i++) {
-                     tols.add(doc.data()['tools'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['kitchen'] != null) {
-                   for (var i = 0; i < doc.data()['kitchen'].length; i++) {
-                     kitchens.add(doc.data()['kitchen'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-            }
-          }
-        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: users.snapshots(),
-          builder: (context, userssnapshot) {
-            if(!userssnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-            for (var element in userssnapshot.data!.docs) {
-              if(element.id == FirebaseAuth.instance.currentUser!.uid){
-                textprice = element.data()['totalmoney'].toString();
-              }
-            }
-            return Scaffold(
+    dropdownitems = dropdownitems.toSet().toList();
+    getTotalMoney().then((value) => 
+      totalmoney = value
+    );
+    return Scaffold(
               appBar: AppBar(
               actions: [
                 Padding(padding: const EdgeInsets.only(left:10),
@@ -242,11 +283,6 @@ class _AllProductsState extends State<AllProducts> {
                   icon: const Icon(Icons.remove_red_eye,color: Colors.white,size: 25,),
                   onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyProducts()));}, 
                 )),
-                Padding(padding: const EdgeInsets.all(15),
-                  child: Center(child: 
-                               GestureDetector(
-                                   onTap: ()async{},
-                                   child: const Icon(Icons.logout,color: Colors.red,)),),),
               ],
               backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(700),
               title: const Center(
@@ -268,6 +304,7 @@ class _AllProductsState extends State<AllProducts> {
                     children: [
                       const SizedBox(height: 10),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           SizedBox(
                             height: 50,
@@ -293,7 +330,7 @@ class _AllProductsState extends State<AllProducts> {
                                   currenttoptab = v!;
                                 });
                               }, 
-                              initialSelection: 'vegetables',
+                              initialSelection: dropdownitems[0],
                               dropdownMenuEntries: dropdownitems.map((e) => DropdownMenuEntry<String>(
                                 value: e,
                                 label: e,
@@ -301,25 +338,8 @@ class _AllProductsState extends State<AllProducts> {
                               ).toList()
                               )
                           ),
-                          SizedBox(
-                            width: 60,
-                            height: 50,
-                            child: ElevatedButton(
-                              style: const ButtonStyle(
-                                backgroundColor: MaterialStatePropertyAll(Colors.white)
-                              ),
-                              onPressed: ()async{
-                                //DatabaseService().addNewTopTab('kitchen','plastic', 'plastic', '2800', '150', 'dec', '12');
-                                await DatabaseService().addNewItemGivenCatagoryToAllProducts('kitchen','spoon', 'spoon', '1800', '150', 'dec', '20');
-                                setState(() {
-                                  
-                                });
-                              }, 
-                              child: const Center(child: Text('A',style: TextStyle(color: Colors.red,fontSize: 13),),),
-                              )
-                          ),
                            SizedBox(
-                            //width: 110,
+                            width: 150,
                             height: 50,
                             child: Center(child: Container(
                               height: 50,
@@ -331,7 +351,7 @@ class _AllProductsState extends State<AllProducts> {
                               ),
                               child: Center(
                                 child: Text(
-                                  "$textprice \$",style: TextStyle(color: int.parse(textprice) <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                                  "$totalmoney \$",style: TextStyle(color: totalmoney < 1 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
                                 ),
                               ),
                             ),)
@@ -347,30 +367,30 @@ class _AllProductsState extends State<AllProducts> {
                             itemBuilder: (context, index) => 
                                     currenttoptab == 'vegetables' ? 
                                     vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,vegslist[index]) 
+                                    buildProductItems(index,vegslist[index],currenttoptab) 
                                     : currenttoptab == 'fruits' ? 
                                     frutslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,frutslist[index])
+                                    buildProductItems(index,frutslist[index],currenttoptab)
                                     : currenttoptab == 'tools' ? 
                                     toolslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index, toolslist[index])
+                                    buildProductItems(index, toolslist[index],currenttoptab)
                                     : currenttoptab == 'kitchen' ?
                                     kitchenslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index, kitchenslist[index])
+                                    buildProductItems(index, kitchenslist[index],currenttoptab)
                                     :
-                                    vegslist.isEmpty ? const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,) :
-                                    buildProductItems(index,vegslist[index]) 
+                                    const CircularProgressIndicator(color: Colors.green,strokeWidth: 10,)
+                                    //buildProductItems(index,frutslist[index]) 
                                     , 
                             separatorBuilder: (context, index) => const Divider(color: Colors.white,thickness: 2), 
-                            itemCount: currenttoptab == 'vegetables' ? 
-                                          vegis.length 
-                                          :  currenttoptab == 'fruits' ?
-                                          frus.length
+                            itemCount: currenttoptab == 'fruits' ? 
+                                          frutslist.length 
+                                          :  currenttoptab == 'vegetables' ?
+                                          vegslist.length
                                           :  currenttoptab == 'tools' ?
-                                          tols.length
+                                          toolslist.length
                                           : currenttoptab == 'kitchen' ?
-                                          kitchens.length
-                                          : 1
+                                          kitchenslist.length
+                                          : frutslist.length
                                           )
                       )
                       ),
@@ -380,9 +400,5 @@ class _AllProductsState extends State<AllProducts> {
                 )
               ),
             );
-          }
-        );
-      }
-    );
-  }
+        }
 }

@@ -106,9 +106,9 @@ class _IntroPageState extends State<IntroPage> {
                             //       await DatabaseService().setNickname(nickname);
                             //       await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
                             //     }
-                            Supabase.instance.client.auth.currentUser!.userMetadata!.addAll({'nickname':nickname,'totalmoney': '5000'});
+                            Supabase.instance.client.auth.currentUser!.userMetadata!.addAll({'nickname':nickname,'totalmoney': 5000});
                             await Supabase.instance.client.auth.updateUser(UserAttributes(data: Supabase.instance.client.auth.currentUser!.userMetadata!));
-                            await Supabase.instance.client.from('users').insert({'id':1,'name':nickname,'email': Supabase.instance.client.auth.currentUser!.email,'password': Supabase.instance.client.auth.currentUser!.userMetadata!['password'], 'totalmoney': '5000'});
+                            await Supabase.instance.client.from('users').insert({'id':1,'name':nickname,'email': Supabase.instance.client.auth.currentUser!.email,'password': Supabase.instance.client.auth.currentUser!.userMetadata!['password'], 'totalmoney': 5000});
                             
                             await Future.delayed(const Duration(seconds: 1),(){
                               const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));
