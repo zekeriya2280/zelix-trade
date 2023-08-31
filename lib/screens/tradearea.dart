@@ -3,6 +3,7 @@ import 'package:feature_notifier/feature_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/database.dart';
 
@@ -26,22 +27,18 @@ class _TradeAreaState extends State<TradeArea> {
   String selectemitemprice = '0';
   String selecteditemamount = '0';
   Map<bool,bool> priceandamountenough = <bool,bool>{false:false};
-  List<String> frus = [];
-  List<String> vegis = [];
-  List<String> tols = [];
-  List<String> kitchens = [];
   List<Map<String, dynamic>> frutslist = [];
   List<Map<String, dynamic>> vegslist = [];
   List<Map<String, dynamic>> toolslist = [];
   List<Map<String, dynamic>> kitchenslist = [];
   List<List<Map<String, dynamic>>> allmylist = [];
   List<List<Map<String, dynamic>>> allpartnerlist = [];
-  List<String> dropdownitems = ['vegetables', 'fruits', 'tools', 'kitchen'];
-  CollectionReference<Map<String, dynamic>> users =
-      FirebaseFirestore.instance.collection('users');
-  CollectionReference<Map<String, dynamic>> tradeareaCollection =
-      FirebaseFirestore.instance.collection('traderooms');
-  String currenttoptab = 'vegetables';
+  List<String> dropdownitems = ['fruits', 'vegetables', 'tools', 'kitchen'];
+  //CollectionReference<Map<String, dynamic>> users =
+  //    FirebaseFirestore.instance.collection('users');
+  //CollectionReference<Map<String, dynamic>> tradeareaCollection =
+  //    FirebaseFirestore.instance.collection('traderooms');
+  String currenttoptab = 'fruits';
 
   @override
   void initState() {
@@ -54,8 +51,9 @@ class _TradeAreaState extends State<TradeArea> {
       productDetails(index, selection);
     });
   }
-  void checktotalMoney()async{
-    totalmoney = await DatabaseService().checktotalMoney();
+  Future<int> checktotalMoney()async{
+    //print(Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0]));
+      return await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0].values.first);
   }
   void productDetails(int index, Map<String, dynamic> selection)async {
     WidgetsBinding.instance.addPostFrameCallback((_)  {
@@ -380,29 +378,10 @@ class _TradeAreaState extends State<TradeArea> {
     }
     return temp;
   }
-  bool iambuilderFinderFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot,AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> userssnapshot){
+  iambuilderFinderFN()async{
     bool temp = false;
-    for (var doc in tradeareasnapshot.data!.docs) {
-                for (var udoc in userssnapshot.data!.docs) {
-                  if(userssnapshot.data!.docs.any((udoc) => FirebaseAuth.instance.currentUser!.uid == udoc.id)){
-                    
-                    if(doc.data()['tradesman1'] == udoc.data()['nickname'] || doc.data()['tradesman2'] == udoc.data()['nickname']){
-                      if(doc.data()['tradesman1'] == udoc.data()['nickname']){
-                        //setState(() {
-                          temp = true;
-                        //});
-                        break;
-                      }
-                      else if(doc.data()['tradesman2'] == udoc.data()['nickname']){
-                        //setState(() {
-                          temp = false;
-                        //});
-                        break;
-                      }
-                    }
-                  }
-                }
-              }
+    String mynickname = await Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'];
+    temp = await Supabase.instance.client.from('rooms').select('tradesman1').is_('tradesman1', mynickname).then((value) => value);
     return temp;
   }
   String? selecteditemFinderFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot){
@@ -440,6 +419,15 @@ class _TradeAreaState extends State<TradeArea> {
   Widget build(BuildContext context) {
     width = MediaQuery.of(context).size.width;
     height = MediaQuery.of(context).size.height;
+    iambuilder = iambuilderFinderFN();
+    checktotalMoney();
+    categoryGetter('alllist');
+    categoryGetterPartner('alllist');
+    allmylistLength = allmylistLengthFN(); 
+    allpartnerlistLength = allpartnerlistLengthFN();
+    selectedItem = selecteditemFinderFN(tradeareasnapshot) ?? "Select";
+    selectedPartnerItem = selecteditemFinderPartnerFN(tradeareasnapshot) ?? "Select";
+    selectedItemPriceFinderFN(selectedItem,selecteditemamount);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -472,26 +460,7 @@ class _TradeAreaState extends State<TradeArea> {
               ],
             ),
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: users.snapshots(),
-        builder: (context, userssnapshot) {
-           if(!userssnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-
-          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: tradeareaCollection.snapshots(),
-            builder: (context, tradeareasnapshot) {
-              if(!tradeareasnapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-
-              iambuilder = iambuilderFinderFN(tradeareasnapshot,userssnapshot);
-              checktotalMoney();
-              categoryGetter('alllist');
-              categoryGetterPartner('alllist');
-              allmylistLength = allmylistLengthFN(); 
-              allpartnerlistLength = allpartnerlistLengthFN();
-              selectedItem = selecteditemFinderFN(tradeareasnapshot) ?? "Select";
-              selectedPartnerItem = selecteditemFinderPartnerFN(tradeareasnapshot) ?? "Select";
-              selectedItemPriceFinderFN(selectedItem,selecteditemamount);
-              return SingleChildScrollView(
+      body: SingleChildScrollView(
                 child: Center(
                   child: SizedBox(
                     height: height,
@@ -795,11 +764,6 @@ class _TradeAreaState extends State<TradeArea> {
                             ],),
                     ]),
                   )),
-              );
-            }
-          );
-        }
-      ),
-    );
-  }
+              )
+            );}
 }

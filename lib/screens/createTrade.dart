@@ -2,9 +2,9 @@ import 'package:clipboard/clipboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/screens/tradearea.dart';
-import 'package:zelix_trade/services/database.dart';
 
 class CreateTrade extends StatefulWidget {
   final String traderoomid;
@@ -17,6 +17,11 @@ class CreateTrade extends StatefulWidget {
 class _CreateTradeState extends State<CreateTrade> {
   final CollectionReference<Map<String, dynamic>> traderooms = FirebaseFirestore.instance.collection('traderooms');
   bool copychecked = false;
+  @override
+  void initState() {
+    print(widget.traderoomid);
+    super.initState();
+  }
 
   Widget copyCheck(){
     if(copychecked){
@@ -48,11 +53,7 @@ class _CreateTradeState extends State<CreateTrade> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: traderooms.snapshots(),
-      builder: (context, snapshot) {
-        if(!snapshot.hasData){return const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));}
-        return Scaffold(
+    return Scaffold(
         appBar: AppBar(
         backgroundColor: const Color.fromARGB(134, 255, 191, 0),
             title: Row(
@@ -108,7 +109,7 @@ class _CreateTradeState extends State<CreateTrade> {
                          )
                         ),
                        onPressed: ()async{
-                         await DatabaseService().clearLastRoom().then((value) async => 
+                         await Supabase.instance.client.from('rooms').delete().eq('id', widget.traderoomid).then((value) async => 
                         
                          await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), ));
                         },
@@ -124,7 +125,5 @@ class _CreateTradeState extends State<CreateTrade> {
             ),
       ),
         );
-      }
-    );
   }
 }

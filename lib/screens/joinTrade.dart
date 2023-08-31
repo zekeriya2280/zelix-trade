@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/screens/tradearea.dart';
 import 'package:zelix_trade/services/database.dart';
@@ -152,14 +153,13 @@ class _JoinTradeState extends State<JoinTrade> {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            bool canjoin =
-                                snapshot.data!.docs.any((e) => e.id == joinid);
-                            print(canjoin);
-                            if (canjoin) {
+                            List<Map<String, dynamic>> joinidmap = await Supabase.instance.client.from('rooms').select<List<Map<String, dynamic>>>('id').eq('id',joinid);
+                            if (joinidmap.isNotEmpty) {
                               setState(() {
                                 notjoiningerror = '';
                               });
-                              await DatabaseService().joinTradeAreaWithID(joinid).then((value) async => 
+                              String mynickname = await Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'];
+                              await Supabase.instance.client.from('rooms').update({'tradesman2': mynickname}).eq('id', joinid).then((value) async => 
                                   await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const TradeArea()), ));
                             } 
                             else {

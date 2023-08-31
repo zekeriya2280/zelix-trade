@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -120,12 +119,23 @@ class _HomeState extends State<Home> {
                           backgroundColor: MaterialStatePropertyAll(Color.fromARGB(65, 46, 25, 25))
                         ),
                         onPressed: ()async{
-                          String traderoomid = '';
-                          traderoomid = await DatabaseService().createTrade();
-                          //print(traderoomid);
-                          traderoomid == null ? 
-                          const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,) 
-                          : 
+                           String traderoomid = '';
+                           String mynickname = await Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'];
+                           List<Map<String,dynamic>> idmaplist = await Supabase.instance.client.from('rooms').select<List<Map<String,dynamic>>>('id').then((value) => value);
+                           print(idmaplist);
+                           if(idmaplist.isEmpty || idmaplist == []){
+                            traderoomid = '1';
+                           }
+                           else{
+                            traderoomid = (int.parse(idmaplist.last['id'].toString()) + 1).toString();
+                           }
+                           await Supabase.instance.client.from('rooms').insert({'id':int.parse(traderoomid),'tradesman1' : mynickname, 'tradesman2' : ''});
+                           //print(data);
+                          //traderoomid = await DatabaseService().createTrade();
+                          ////print(traderoomid);
+                          //traderoomid == null ? 
+                          //const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,) 
+                          //: 
                           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  CreateTrade(traderoomid:traderoomid)));
                         }, 
                         child: const Text('Create Trade', style: TextStyle(fontSize: 30,color: Colors.white)))),

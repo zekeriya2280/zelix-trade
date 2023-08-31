@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/home.dart';
-import 'package:zelix_trade/services/database.dart';
 
 class MyProducts extends StatefulWidget {
   const MyProducts({super.key});
