@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/allproducts.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/services/database.dart';
@@ -18,23 +18,73 @@ class _MyProductsState extends State<MyProducts> {
   double width = 0;
   bool breaker = true;
   int proditemcount = 0;
-  String textprice = '';
+  int totalmoney = 0;
   List<String> prodnames = [];
-  List<String> frus = [];
-  List<String> vegis = [];
-  List<String> tols = [];
-  List<String> kitchens = [];
-  String currenttoptab = 'vegetables';
+  String currenttoptab = 'fruits';
   List<Map<String, dynamic>> frutslist = [];
   List<Map<String, dynamic>> vegslist = [];
   List<Map<String, dynamic>> toolslist = [];
   List<Map<String, dynamic>> kitchenslist = [];
-  List<String> dropdownitems = ['vegetables', 'fruits', 'tools', 'kitchen'];
+  List<String> dropdownitems = ['fruits'];
   CollectionReference<Map<String, dynamic>> users =
       FirebaseFirestore.instance.collection('users');
   @override
   void initState() {
+    getallLists();
     super.initState();
+  }
+  getallLists(){
+    Supabase.instance.client.from('boughtProducts').stream(primaryKey: ['id']).eq('owner',Supabase.instance.client.auth.currentUser!.email).listen((event) async {
+      event.sort((a,b)=>a['id'].compareTo(b['id'])); 
+        
+        for (var map in event) { 
+          //print(map);
+          for (var i = 0; i < map.values.length; i++) {
+            if(List<dynamic>.from(map.values)[i] == 'fruits'){
+              setState(() {
+                frutslist.add({'name' : List<dynamic>.from(map.values)[3], 
+                               'price' : List<dynamic>.from(map.values)[4], 
+                               'amount' : List<dynamic>.from(map.values)[5], 
+                               'incdec' : List<dynamic>.from(map.values)[6], 
+                               'percent' : List<dynamic>.from(map.values)[7]});
+              });
+            }else if(List<dynamic>.from(map.values)[i] == 'vegetables'){
+              setState(() {
+                vegslist.add({'name' : List<dynamic>.from(map.values)[3], 
+                              'price' : List<dynamic>.from(map.values)[4], 
+                              'amount' : List<dynamic>.from(map.values)[5], 
+                              'incdec' : List<dynamic>.from(map.values)[6], 
+                              'percent' : List<dynamic>.from(map.values)[7]});
+              });
+            }else if(List<dynamic>.from(map.values)[i] == 'tools'){
+              setState(() {
+                toolslist.add({'name' : List<dynamic>.from(map.values)[3], 
+                               'price' : List<dynamic>.from(map.values)[4], 
+                               'amount' : List<dynamic>.from(map.values)[5], 
+                               'incdec' : List<dynamic>.from(map.values)[6], 
+                               'percent' : List<dynamic>.from(map.values)[7]});
+              });
+            }else if(List<dynamic>.from(map.values)[i] == 'kitchen'){
+              setState(() {
+                kitchenslist.add({'name' : List<dynamic>.from(map.values)[3], 
+                                  'price' : List<dynamic>.from(map.values)[4], 
+                                  'amount' : List<dynamic>.from(map.values)[5], 
+                                  'incdec' : List<dynamic>.from(map.values)[6], 
+                                  'percent' : List<dynamic>.from(map.values)[7]});
+              });
+            }
+            List<Map<String,dynamic>> categories = await Supabase.instance.client.from('allproducts').select<List>('category').then((value) => List<Map<String,dynamic>>.from(value));
+            for (var i = 0; i < categories.length; i++) {
+              dropdownitems.add(Map<String,dynamic>.from(categories[i]).values.first);
+            }
+            dropdownitems = dropdownitems.toSet().toList();
+          }
+        }
+     });
+  }
+  Future<int> getTotalMoney()async{
+    //print(Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0]));
+      return await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0].values.first);
   }
   void resetDetails(int index, Map<String, dynamic> selection) {
     setState(() {
@@ -69,45 +119,44 @@ class _MyProductsState extends State<MyProducts> {
           descriptionColor: Colors.white,
           descriptionFontSize: 20,
           backgroundColor: Colors.white54, 
-          buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
-          onTapButton: selection['amount'] == '0'? null : ()async{
-            await DatabaseService().sellItemGivenCatagoryToAllProducts(currenttoptab,selection['name'],selection['name'],selection['price'],selection['incdec'],selection['percent']).then(
-              (value) => setState(() { Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyProducts())); })
-               );
-              setState(() { });
+          buttonBackgroundColor:selection['amount'] == 0 || totalmoney <selection['price'] ? Colors.grey:Colors.green,
+          onTapButton: selection['amount'] == 0 || totalmoney < selection['price'] ? null : ()async{
+                int newprice = selection['price'] + (double.parse((selection['price'] * selection['percent']).toString())/100).floor();
+                List<Map<String,dynamic>> allproselectedamount =  await Supabase.instance.client.from('allproducts').select<List<Map<String,dynamic>>>('amount').eq('name', selection['name']).then((value) => value);
+                int newamountforAllProducts = int.parse(allproselectedamount[0].values.first.toString()) + 1;
+                int newamountforme = 1;
+                List<Map<String,dynamic>> lastamountforme = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('amount').eq('name', selection['name']).then((value) => value);
+                if(lastamountforme == [] || lastamountforme.isEmpty){
+                  newamountforme = 1;
+                }
+                else{
+                  newamountforme  = int.parse(lastamountforme[0].values.first.toString()) - 1;
+                }
+                double newpercent = selection['percent'] - 0.5;
+                String newincdec = 'dec';
+                List<Map<String,dynamic>> itemnames = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('name').then((value) => value);
+                if(itemnames.any((itemmap) => itemmap.values.first == selection['name'])){
+                  await Supabase.instance.client.from('boughtProducts').update({'category': currenttoptab,
+                                                                                'name':selection['name'],
+                                                                                'price': newprice,
+                                                                                'amount':newamountforme,
+                                                                                'incdec':newincdec,
+                                                                                'percent':newpercent})
+                                                                                .eq('name', selection['name'])
+                                                                                .eq('owner', Supabase.instance.client.auth.currentUser!.email);
+                }
+                await Supabase.instance.client.from('allproducts').update({'price': newprice}).eq('name', selection['name']);
+                await Supabase.instance.client.from('allproducts').update({'percent': newpercent}).eq('name', selection['name']);
+                await Supabase.instance.client.from('allproducts').update({'amount': newamountforAllProducts}).eq('name', selection['name']);
+                await Supabase.instance.client.from('allproducts').update({'incdec': newincdec}).eq('name', selection['name']);
+
+            /**/await Supabase.instance.client.from('users').update({'totalmoney': (totalmoney + selection['price'])}).eq('email', Supabase.instance.client.auth.currentUser!.email).then(
+                (value) => setState(() { Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProducts())); })
+                 );
         });
     });
   }
-
-  Future<void> categoryGetter(String list) async {
-    if (list == 'vegslist') {
-      final result =
-          await DatabaseService().getFromFirebaseCategoriesOfMY('vegetables');
-      setState(() {
-        vegslist = result;
-      });
-    } else if (list == 'frutslist') {
-      final result =
-          await DatabaseService().getFromFirebaseCategoriesOfMY('fruits');
-      setState(() {
-        frutslist = result;
-      });
-    } else if (list == 'toolslist') {
-      final result = await DatabaseService().getFromFirebaseCategoriesOfMY('tools');
-      setState(() {
-        toolslist = result;
-      });
-    } else if (list == 'kitchenslist') {
-      final result =
-          await DatabaseService().getFromFirebaseCategoriesOfMY('kitchen');
-      setState(() {
-        kitchenslist = result;
-      });
-    }
-  }
-
-  buildProductItems(int index, Map<String, dynamic> taboption) {
-    Map<String, dynamic> selection = taboption[taboption.keys.first];
+  buildProductItems(int index, Map<String, dynamic> selection){
     return GestureDetector(
       onTap: () => setState(() {
         resetDetails(index, selection);
@@ -115,7 +164,7 @@ class _MyProductsState extends State<MyProducts> {
       child: SizedBox(
         height: 150,
         child: Card(
-            color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
+            color: selection['amount']==0 ?const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
@@ -186,7 +235,7 @@ class _MyProductsState extends State<MyProducts> {
                                           child: Image(
                                               height: 30,
                                               width: 100,
-                                              image: AssetImage(selection['amount']=='0' ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
+                                              image: AssetImage(selection['amount']==0 ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
                                       const SizedBox(
                                         height: 20,
                                       ),
@@ -217,6 +266,10 @@ class _MyProductsState extends State<MyProducts> {
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
+    dropdownitems = dropdownitems.toSet().toList();
+    getTotalMoney().then((value) => 
+      totalmoney = value
+    );
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: users.snapshots(),
         builder: (context, snapshot) {
@@ -227,52 +280,52 @@ class _MyProductsState extends State<MyProducts> {
               strokeWidth: 10,
             ));
           }
-          if (currenttoptab == 'vegetables') {
-              categoryGetter('vegslist');
-          } else if (currenttoptab == 'fruits'){
-              categoryGetter('frutslist');
-          }
-          else if (currenttoptab == 'tools'){
-            categoryGetter('toolslist');
-          }
-          else if (currenttoptab == 'kitchen'){
-            categoryGetter('kitchenslist');
-          }
-          for (var doc in snapshot.data!.docs) {
-            if (FirebaseAuth.instance.currentUser!.uid == doc.id) {
-              if (breaker) {
-                 if (doc.data()['vegetables'] != null) {
-                   for (var i = 0; i < doc.data()['vegetables'].length; i++) {
-                     vegis.add(doc.data()['vegetables'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['fruits'] != null) {
-                   for (var i = 0; i < doc.data()['fruits'].length; i++) {
-                     frus.add(doc.data()['fruits'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['tools'] != null) {
-                   for (var i = 0; i < doc.data()['tools'].length; i++) {
-                     tols.add(doc.data()['tools'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-                 if (doc.data()['kitchen'] != null) {
-                   for (var i = 0; i < doc.data()['kitchen'].length; i++) {
-                     kitchens.add(doc.data()['kitchen'][i].keys.first);
-                   }
-                   breaker = false;
-                 }
-              }
-            }
-          }
-          for (var element in snapshot.data!.docs) {
-              if(element.id == FirebaseAuth.instance.currentUser!.uid){
-                textprice = element.data()['totalmoney'].toString();
-              }
-          }
+          //if (currenttoptab == 'vegetables') {
+          //    categoryGetter('vegslist');
+          //} else if (currenttoptab == 'fruits'){
+          //    categoryGetter('frutslist');
+          //}
+          //else if (currenttoptab == 'tools'){
+          //  categoryGetter('toolslist');
+          //}
+          //else if (currenttoptab == 'kitchen'){
+          //  categoryGetter('kitchenslist');
+          //}
+          //for (var doc in snapshot.data!.docs) {
+          //  if (FirebaseAuth.instance.currentUser!.uid == doc.id) {
+          //    if (breaker) {
+          //       if (doc.data()['vegetables'] != null) {
+          //         for (var i = 0; i < doc.data()['vegetables'].length; i++) {
+          //           vegis.add(doc.data()['vegetables'][i].keys.first);
+          //         }
+          //         breaker = false;
+          //       }
+          //       if (doc.data()['fruits'] != null) {
+          //         for (var i = 0; i < doc.data()['fruits'].length; i++) {
+          //           frus.add(doc.data()['fruits'][i].keys.first);
+          //         }
+          //         breaker = false;
+          //       }
+          //       if (doc.data()['tools'] != null) {
+          //         for (var i = 0; i < doc.data()['tools'].length; i++) {
+          //           tols.add(doc.data()['tools'][i].keys.first);
+          //         }
+          //         breaker = false;
+          //       }
+          //       if (doc.data()['kitchen'] != null) {
+          //         for (var i = 0; i < doc.data()['kitchen'].length; i++) {
+          //           kitchens.add(doc.data()['kitchen'][i].keys.first);
+          //         }
+          //         breaker = false;
+          //       }
+          //    }
+          //  }
+          //}
+          //for (var element in snapshot.data!.docs) {
+          //    if(element.id == FirebaseAuth.instance.currentUser!.uid){
+          //      textprice = element.data()['totalmoney'].toString();
+          //    }
+          //}
           return Scaffold(
             appBar: AppBar(
               actions: [
@@ -373,7 +426,7 @@ class _MyProductsState extends State<MyProducts> {
                                   currenttoptab = v!;
                                 });
                               },
-                              initialSelection: 'vegetables',
+                              initialSelection:  dropdownitems[0],
                               dropdownMenuEntries: dropdownitems
                                   .map((e) => DropdownMenuEntry<String>(
                                         value: e,
@@ -393,7 +446,7 @@ class _MyProductsState extends State<MyProducts> {
                           ),
                           child: Center(
                             child: Text(
-                              "$textprice \$",style: TextStyle(color: int.parse(textprice) <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
+                              "$totalmoney \$",style: TextStyle(color: totalmoney <= 0 ? Colors.red : Colors.green,fontSize:20,fontWeight: FontWeight.bold,letterSpacing: 2),
                             ),
                           ),
                         ),)
@@ -426,14 +479,14 @@ class _MyProductsState extends State<MyProducts> {
                               separatorBuilder: (context, index) =>
                                   const Divider(),
                               itemCount: currenttoptab == 'vegetables' ? 
-                                      vegis.length 
+                                      vegslist.length 
                                       :  currenttoptab == 'fruits' ?
-                                      frus.length
+                                      frutslist.length
                                       :  currenttoptab == 'tools' ?
-                                      tols.length
+                                      toolslist.length
                                       : currenttoptab == 'kitchen' ?
-                                      kitchens.length
-                                      : vegis.length
+                                      kitchenslist.length
+                                      : vegslist.length
                                       )
                                       )
                                       ),

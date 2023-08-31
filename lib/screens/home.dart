@@ -37,9 +37,9 @@ class _HomeState extends State<Home> {
   //  await DatabaseService().clearLastRoomIfIJoiner();  
   //} 
   void supabase()async{
-    //await Supabase.instance.client.from('allproducts2').delete().gt('id', 0);
+    //await Supabase.instance.client.from('allproducts').delete().gt('id', 0);
     //print(Supabase.instance.client.from('allproducts').insert({'products':{'fruits':'apple'}}).then((value) => value));
-    //await Supabase.instance.client.from('allproducts2').insert({'item':'fruits'});
+    //await Supabase.instance.client.from('boughtProducts').update({'price':'1500'}).eq('id', 3);
    // await Supabase.instance.client.from('allproducts').insert({'id':1,'category': 'fruits','name':'apple','price':'1000','amount':'40','incdec':'dec','percent':'0.0'});
    // await Supabase.instance.client.from('allproducts').insert({'id':2,'category': 'fruits','name':'pear','price':'1500','amount':'30','incdec':'inc','percent':'0.0'} );
    // await Supabase.instance.client.from('allproducts').insert({'id':3,'category': 'vegetables','name':'tomatoes','price':'1000','amount':'40','incdec':'dec','percent':'0.0' }); 
@@ -122,7 +122,7 @@ class _HomeState extends State<Home> {
                         onPressed: ()async{
                           String traderoomid = '';
                           traderoomid = await DatabaseService().createTrade();
-                          print(traderoomid);
+                          //print(traderoomid);
                           traderoomid == null ? 
                           const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,) 
                           : 
