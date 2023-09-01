@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,6 +27,8 @@ class _TradeAreaState extends State<TradeArea> {
   int selecteditemamount = 0;
   int selectedpartneritemprice = 0;
   int selectedpartneritemamount = 0;
+  bool myenteredamountnotanumber = false;
+  String notenoughtamounterror = '';
   Map<bool,bool> priceandamountenough = <bool,bool>{false:false};
   List<Map<String, dynamic>> frutslist = [];
   List<Map<String, dynamic>> vegslist = [];
@@ -432,10 +436,10 @@ class _TradeAreaState extends State<TradeArea> {
                                 builder: (context) => const Home()));
                       },
                     )),),
-                Expanded(flex: 5,child: Center(child: Text('Zelix Trade',style: GoogleFonts.pacifico(fontSize: 28,color: Colors.white),))),
+                Expanded(flex: 4,child: Center(child: Text('Zelix Trade',style: GoogleFonts.pacifico(fontSize: 28,color: Colors.white),))),
                 Expanded(flex: 2,child: Padding(
                     padding: const EdgeInsets.only(left: 10),
-                    child: Container(child: Center(child: Text('$totalmoney \$',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 20),)),)
+                    child: Container(child: Center(child: Text('$totalmoney \$',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,letterSpacing: 1,fontSize: 18),)),)
                     ),),
                 //const Expanded(flex: 1,child: Text(''),),
               ],
@@ -451,7 +455,7 @@ class _TradeAreaState extends State<TradeArea> {
                           Column(children: [
                             ///////////////////////////////////////////////////////////////////////////////////////////////////////////// I AM BUILDER OTHER IS JOINER
                             SizedBox(
-                              height: height / 3,
+                              height: height / 3.1,
                               width: width,
                               child: Center(
                                   child: ListView.separated(
@@ -488,7 +492,7 @@ class _TradeAreaState extends State<TradeArea> {
                                         height: 28,
                                         child: Text('Amount',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),)),
                                       Container(
-                                        color: Colors.yellow,
+                                        //color: Colors.yellow,
                                         height: 25,
                                         width: 100,
                                         child: Center(
@@ -511,10 +515,35 @@ class _TradeAreaState extends State<TradeArea> {
                                                 borderRadius: BorderRadius.circular(10.0),
                                               )
                                             ),
-                                            onChanged: (v){
-                                              setState(() {
-                                                selecteditemamount = int.parse(v);
-                                              });
+                                            onChanged: selectedItem == '' || selectedItem == 'Select' ? null : (v)async{
+                                              bool _isNumeric(String result) {
+                                                if (result == null) {
+                                                  return false;
+                                                }
+                                                return double.tryParse(result) != null;
+                                              }
+                                              if(_isNumeric(v)){
+                                                  setState(() {
+                                                    myenteredamountnotanumber = false;
+                                                  });
+                                                  await Supabase.instance.client.from('rooms').update({'myselecteditemamount' : int.parse(v.toString())})
+                                                                                              .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
+                                                  List<Map<String, dynamic>> mypricelist = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price')
+                                                                                              .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                                                              .eq('name', selectedItem);
+                                                  await Supabase.instance.client.from('rooms').update({'myselecteditemprice' : int.parse(v.toString()) * int.parse(mypricelist[0].values.first.toString())})
+                                                                                              .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
+                                                                                              
+                                                  setState(() {
+                                                    selecteditemamount = int.parse(v.toString());
+                                                    selecteditemprice = int.parse(v.toString()) * int.parse(mypricelist[0].values.first.toString());
+                                                  });
+                                              }
+                                              else{
+                                                setState(() {
+                                                  myenteredamountnotanumber = true;
+                                                });
+                                              }
                                             },
                                           ),
                                         ),
@@ -535,15 +564,57 @@ class _TradeAreaState extends State<TradeArea> {
                                     height: 100,
                                     width: 100,
                                     child: ElevatedButton(
-                                      style: const ButtonStyle(
+                                      style:  ButtonStyle(
+                                        backgroundColor: selectedItem == '' || selectedItem == 'Select' || myenteredamountnotanumber ? MaterialStatePropertyAll(Colors.grey) : MaterialStatePropertyAll(Colors.white),
                                         shadowColor: MaterialStatePropertyAll(Colors.green),
                                         side: MaterialStatePropertyAll(BorderSide(color: Colors.green)),
                                       ),
-                                      onPressed:selectedItem == '' || selectedItem == 'Select' ? null : (){
-                                       // checkAmountAndPrice(totalmoney,selectedItem!,selecteditemamount,selectemitemprice);
-                                       // moveToSelectedItemAmountToPartner(selectedItem!,selecteditemamount);
-                                        if(priceandamountenough == {true:true}){
-                                          
+                                      onPressed:selectedItem == '' || selectedItem == 'Select' || myenteredamountnotanumber ? null : ()async{
+                                        List<Map<String, dynamic>> myamountmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('amount')
+                                                                                              .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                                                              .eq('name', selectedItem);
+                                        //print(int.parse(myamountmap[0].values.first.toString()));
+                                        if(selecteditemamount > int.parse(myamountmap[0].values.first.toString())){
+                                          setState(() {
+                                            notenoughtamounterror = 'Not enough amount';
+                                          });
+                                        }
+                                        else{
+                                          setState(() {
+                                            notenoughtamounterror = '';
+                                          });
+                                          List<Map<String, dynamic>> partnernicknamemap = await Supabase.instance.client.from('rooms')
+                                                                               .select<PostgrestList>(iambuilder ? 'tradesman2' : 'tradesman1')
+                                                                               .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'])
+                                                                               .then((value) => value);
+                                          List<Map<String, dynamic>> partneremailmap = await Supabase.instance.client.from('users').select<PostgrestList>('email').eq('name',partnernicknamemap[0].values.first).then((value) => value);
+                                          List<Map<String, dynamic>> mycategorymap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('category')
+                                                                                              .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                                                              .eq('name', selectedItem);
+                                          List<Map<String, dynamic>> mypricemap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price')
+                                                                                              .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                                                              .eq('name', selectedItem);
+                                          List<Map<String, dynamic>> myincdecmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('incdec')
+                                                                                              .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                                                              .eq('name', selectedItem);
+                                          List<Map<String, dynamic>> mypercentmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('percent')
+                                                                                              .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                                                              .eq('name', selectedItem);
+                                          List<Map<String, dynamic>> allids= await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('id').then((value) => value);
+                                          List<int> temp = [];
+                                          for (var i = 0; i < allids.length; i++) {
+                                            for (var intelmnt in List<int>.from(allids[i].values)) {
+                                              temp.add(int.parse(intelmnt.toString()));
+                                            }
+                                          }
+                                          temp.sort();
+                                          int lastid = temp.last;
+                                          print(lastid);
+                                          await Supabase.instance.client.from('boughtProducts').insert({'id': lastid + 1,'owner':partneremailmap[0].values.first.toString(),'category':mycategorymap[0].values.first.toString(),'name':selectedItem,'amount':selecteditemamount,'price':mypricemap[0].values.first.toString(),'incdec':myincdecmap[0].values.first.toString(),'percent':mypercentmap[0].values.first.toString()});
+                                          await Supabase.instance.client.from('boughtProducts').update({'amount':int.parse(myamountmap[0].values.first.toString()) - selecteditemamount})
+                                                                                               .eq('name',selectedItem)
+                                                                                               .eq('owner', Supabase.instance.client.auth.currentUser!.email);
+                                          await Supabase.instance.client.from('users').update({'totalmoney' : totalmoney + selecteditemprice}).eq('name', Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
                                         }
                                       }, 
                                       child: const Center(child: Text('SELL',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
@@ -551,6 +622,7 @@ class _TradeAreaState extends State<TradeArea> {
                                 ],
                               ),
                             ),
+                            SizedBox(height: 16,child: Text(notenoughtamounterror,style: const TextStyle(color: Colors.red,fontSize: 13,letterSpacing: 3,fontWeight: FontWeight.bold),)),
                             ////////////////////////////////////////////////////////////////////////////////////////////////////////
                             const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 11,thickness: 6,indent: 10,endIndent: 10),
                             const Divider(color: Color.fromARGB(255, 255, 187, 0),height: 7,thickness: 6,indent: 10,endIndent: 10),
