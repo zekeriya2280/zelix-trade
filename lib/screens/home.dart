@@ -8,7 +8,6 @@ import 'package:zelix_trade/screens/createTrade.dart';
 import 'package:zelix_trade/screens/joinTrade.dart';
 import 'package:zelix_trade/screens/options.dart';
 import 'package:zelix_trade/services/authservice.dart';
-import 'package:zelix_trade/services/database.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -36,6 +35,8 @@ class _HomeState extends State<Home> {
   //  await DatabaseService().clearLastRoomIfIJoiner();  
   //} 
   void supabase()async{
+   final mynick = Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'].toString();
+   await Supabase.instance.client.from('rooms').delete().or('tradesman1.eq.$mynick,tradesman2.eq.$mynick');
     //await Supabase.instance.client.from('allproducts').delete().gt('id', 0);
     //print(Supabase.instance.client.from('allproducts').insert({'products':{'fruits':'apple'}}).then((value) => value));
     //await Supabase.instance.client.from('boughtProducts').update({'price':'1500'}).eq('id', 3);

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
 import 'package:zelix_trade/screens/tradearea.dart';
-import 'package:zelix_trade/services/database.dart';
 
 class JoinTrade extends StatefulWidget {
   const JoinTrade({super.key});

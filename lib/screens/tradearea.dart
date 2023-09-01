@@ -1,11 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feature_notifier/feature_notifier.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
-import 'package:zelix_trade/services/database.dart';
 
 class TradeArea extends StatefulWidget {
   const TradeArea({super.key});
@@ -21,23 +18,20 @@ class _TradeAreaState extends State<TradeArea> {
   bool iambuilder = false;
   int allmylistLength = 0;
   int allpartnerlistLength = 0;
-  String totalmoney = "";
+  int totalmoney = 0;
   String? selectedItem = 'Select';
   String? selectedPartnerItem = 'Select';
-  String selectemitemprice = '0';
-  String selecteditemamount = '0';
+  int selecteditemprice = 0;
+  int selecteditemamount = 0;
+  int selectedpartneritemprice = 0;
+  int selectedpartneritemamount = 0;
   Map<bool,bool> priceandamountenough = <bool,bool>{false:false};
   List<Map<String, dynamic>> frutslist = [];
   List<Map<String, dynamic>> vegslist = [];
   List<Map<String, dynamic>> toolslist = [];
   List<Map<String, dynamic>> kitchenslist = [];
-  List<List<Map<String, dynamic>>> allmylist = [];
-  List<List<Map<String, dynamic>>> allpartnerlist = [];
-  List<String> dropdownitems = ['fruits', 'vegetables', 'tools', 'kitchen'];
-  //CollectionReference<Map<String, dynamic>> users =
-  //    FirebaseFirestore.instance.collection('users');
-  //CollectionReference<Map<String, dynamic>> tradeareaCollection =
-  //    FirebaseFirestore.instance.collection('traderooms');
+  List<Map<String, dynamic>> allmylist = [];
+  List<Map<String, dynamic>> allpartnerlist = [];
   String currenttoptab = 'fruits';
 
   @override
@@ -51,9 +45,8 @@ class _TradeAreaState extends State<TradeArea> {
       productDetails(index, selection);
     });
   }
-  Future<int> checktotalMoney()async{
-    //print(Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0]));
-      return await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => value[0].values.first);
+  checktotalMoney()async{
+      return totalmoney = await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('email', Supabase.instance.client.auth.currentUser!.email).then((value) => int.parse(value[0].values.first.toString()));
   }
   void productDetails(int index, Map<String, dynamic> selection)async {
     WidgetsBinding.instance.addPostFrameCallback((_)  {
@@ -81,9 +74,9 @@ class _TradeAreaState extends State<TradeArea> {
           descriptionColor: Colors.white,
           descriptionFontSize: 20,
           backgroundColor: Colors.white54, 
-          buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
-          onTapButton: selection['amount'] == '0'? null : ()async{
-            await DatabaseService().selectMyItem(selection['name']);
+          buttonBackgroundColor:selection['amount'] == 0 ? Colors.grey:Colors.green,
+          onTapButton: selection['amount'] == 0 ? null : ()async{
+            await Supabase.instance.client.from('rooms').update({'myselecteditem':selection['name'],'myselecteditemamount' : 1,'myselecteditemprice' : selection['price']}).or('tradesman1.eq.${Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']},tradesman2.eq.${Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']}');
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TradeArea())); 
         });
     });
@@ -121,47 +114,60 @@ class _TradeAreaState extends State<TradeArea> {
           descriptionColor: Colors.white,
           descriptionFontSize: 20,
           backgroundColor: Colors.white54, 
-          buttonBackgroundColor:selection['amount'] == '0' ? Colors.grey:Colors.green,
-          onTapButton: selection['amount'] == '0'? null : ()async{
-            await DatabaseService().selectPartnersItem(selection['name']);
+          buttonBackgroundColor:selection['amount'] == 0 ? Colors.grey:Colors.green,
+          onTapButton: selection['amount'] == 0 ? null : ()async{
+            await Supabase.instance.client.from('rooms').update({'partnerselecteditem':selection['name'],'partnerselecteditemamount' : 1,'partnerselecteditemprice' : selection['price']}).or('tradesman1.eq.${Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']},tradesman2.eq.${Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']}');
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const TradeArea())); 
         });
     });
   }
 
-  Future<void> categoryGetter(String list) async {
-      List<List<Map<String,dynamic>>> result = [];
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('vegetables'));
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('fruits'));
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('tools'));
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfMY('kitchen'));
-      setState(() {
-        allmylist = result;
-      });
+  Future<void> categoryGetter() async {
+    List<Map<String,dynamic>> allcategorylist = [];
+    List<Map<String,dynamic>> myitemnames = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('name').eq('owner',Supabase.instance.client.auth.currentUser!.email).then((value) => value);
+    List<Map<String,dynamic>> myitemprices = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price').eq('owner',Supabase.instance.client.auth.currentUser!.email).then((value) => value);
+    List<Map<String,dynamic>> myitemamounts = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('amount').eq('owner',Supabase.instance.client.auth.currentUser!.email).then((value) => value);
+    List<Map<String,dynamic>> myitemincdec = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('incdec').eq('owner',Supabase.instance.client.auth.currentUser!.email).then((value) => value);
+    List<Map<String,dynamic>> myitempercents = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('percent').eq('owner',Supabase.instance.client.auth.currentUser!.email).then((value) => value);
+    for (var i = 0; i < myitemnames.length; i++) {
+      allcategorylist.add({'name':myitemnames[i].values.first,'price':myitemprices[i].values.first,'amount':myitemamounts[i].values.first,'incdec':myitemincdec[i].values.first,'percent':myitempercents[i].values.first});
+    }
+    setState(() {
+      allmylist = allcategorylist;
+    });
+    
   }
-  Future<void> categoryGetterPartner(String list) async {
-      List<List<Map<String,dynamic>>> result = [];
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('vegetables'));
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('fruits'));
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('tools'));
-      result.add(await DatabaseService().getFromFirebaseCategoriesOfPartner('kitchen'));
-      setState(() {
-        allpartnerlist = result;
-      });
+  Future<void> categoryGetterPartner(bool iambuilder) async {
+    List<Map<String,dynamic>> allcategorylist = [];
+    List<Map<String, dynamic>> partnernicknamemap = await Supabase.instance.client.from('rooms')
+                                                                               .select<PostgrestList>(iambuilder ? 'tradesman2' : 'tradesman1')
+                                                                               .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'])
+                                                                               .then((value) => value);
+    List<Map<String, dynamic>> partneremailmap = await Supabase.instance.client.from('users').select<PostgrestList>('email').eq('name',partnernicknamemap[0].values.first).then((value) => value);
+    
+    List<Map<String,dynamic>> partneritemnames = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('name').eq('owner',partneremailmap[0].values.first).then((value) => value);
+    List<Map<String,dynamic>> partneritemprices = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price').eq('owner',partneremailmap[0].values.first).then((value) => value);
+    List<Map<String,dynamic>> partneritemamounts = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('amount').eq('owner',partneremailmap[0].values.first).then((value) => value);
+    List<Map<String,dynamic>> partneritemincdec = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('incdec').eq('owner',partneremailmap[0].values.first).then((value) => value);
+    List<Map<String,dynamic>> partneritempercents = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('percent').eq('owner',partneremailmap[0].values.first).then((value) => value);
+    for (var i = 0; i < partneritemnames.length; i++) {
+      allcategorylist.add({'name':partneritemnames[i].values.first,'price':partneritemprices[i].values.first,'amount':partneritemamounts[i].values.first,'incdec':partneritemincdec[i].values.first,'percent':partneritempercents[i].values.first});
+    }
+    setState(() {
+      allpartnerlist = allcategorylist;
+    });
+    
   }
 
-  buildProductItems(int index, List<Map<String, dynamic>> categorylist) {
-    List<Widget> items = [];
-    for (var item = 0; item < categorylist.length; item++) {
-      Map<String, dynamic> selection = categorylist[item].values.first;
-      items.add( GestureDetector(
-                 onTap: () => setState(() {
+  buildProductItems(int index, Map<String, dynamic> selection) {
+        return GestureDetector(
+                 onTap: selection['amount']==0 ? null : () => setState(() {
                    resetDetails(index, selection);
                  }),
                  child: SizedBox(
                    height: 100,
                    child: Card(
-                       color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
+                       color: selection['amount']==0 ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
                        child: ListTile(
                          leading: SizedBox(
                              height: 150,
@@ -229,7 +235,7 @@ class _TradeAreaState extends State<TradeArea> {
                                                    child: Image(
                                                        height: 30,
                                                        width: 100,
-                                                       image: AssetImage(selection['amount']=='0' ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
+                                                       image: AssetImage(selection['amount']==0 ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
                                                const SizedBox(
                                                  height: 5,
                                                ),
@@ -252,24 +258,17 @@ class _TradeAreaState extends State<TradeArea> {
                              )),
                        )),
                  ),
-               )
-      );
+               );
     }
-    return Column(children: items,);
-  }
-   Widget buildProductItemsPartner(int index, List<Map<String, dynamic>> categorylist) {
-    List<Widget> items = [];
-    if(categorylist == []){return const Center(child: Text('nothing'));}
-    for (var item = 0; item < categorylist.length; item++) {
-      Map<String, dynamic> selection = categorylist[item].values.first;
-      items.add(GestureDetector(
-                 onTap: () => setState(() {
+   Widget buildProductItemsPartner(int index, Map<String, dynamic> selection) {
+        return GestureDetector(
+                 onTap: selection['amount']==0 ? null : () => setState(() {
                    resetDetailsPartner(index, selection);
                  }),
                  child: SizedBox(
         height: 100,
         child: Card(
-            color: selection['amount']=='0' ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
+            color: selection['amount']==0 ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
             child: ListTile(
               leading: SizedBox(
                   height: 150,
@@ -336,7 +335,7 @@ class _TradeAreaState extends State<TradeArea> {
                                         child: Image(
                                             height: 30,
                                             width: 100,
-                                            image: AssetImage(selection['amount']=='0' ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
+                                            image: AssetImage(selection['amount']==0 ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
                                     const SizedBox(
                                       height: 5,
                                     ),
@@ -358,76 +357,58 @@ class _TradeAreaState extends State<TradeArea> {
                     ),
                   )),
             )),
-      ))
+      )
       );
-    }
-    return Column(children: items,);
   }
   int allmylistLengthFN(){
-    int temp = 0;
-    for (var list in allmylist) {
-      temp += list.length;
-    }
-    return temp;
+    return allmylist.length;
   }
   int allpartnerlistLengthFN(){
-    int temp = 0;
-    for (var list in allpartnerlist) {
-      if(list.isEmpty){temp += 1;}
-      temp += list.length;
-    }
-    return temp;
+    return allpartnerlist.length;
   }
   iambuilderFinderFN()async{
-    bool temp = false;
     String mynickname = await Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'];
-    temp = await Supabase.instance.client.from('rooms').select('tradesman1').is_('tradesman1', mynickname).then((value) => value);
-    return temp;
+    List<Map<String, dynamic>> temp = await Supabase.instance.client.from('rooms').select<PostgrestList>('tradesman1').then((value) => value);
+    return iambuilder = temp.any((map) => map.values.first == mynickname);
   }
-  String? selecteditemFinderFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot){
-    String temp = '';
-    for (var doc in tradeareasnapshot.data!.docs) {
-      if(doc.data()['selectedmyItem'] != null){
-          temp = doc.data()['selectedmyItem'];
-      }
-    }
-    return temp;
+  selecteditemNameAndPriceFinderFN()async{
+    List<Map<String, dynamic>> myselecteditemmap = await Supabase.instance.client.from('rooms').select<PostgrestList>('myselecteditem').eq(iambuilder ? 'tradesman1' : 'tradesman2' , Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']).then((value) => value);
+    selectedItem = myselecteditemmap[0].values.first ?? "Select";
+    List<Map<String, dynamic>> myselecteditempricemap = await Supabase.instance.client.from('rooms').select<PostgrestList>('myselecteditemprice').eq(iambuilder ? 'tradesman1' : 'tradesman2' , Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']).then((value) => value);
+    selecteditemprice = myselecteditempricemap[0].values.first ?? 0;
   }
-  String? selecteditemFinderPartnerFN(AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> tradeareasnapshot){
-    String temp = '';
-    for (var doc in tradeareasnapshot.data!.docs) {
-      if(doc.data()['selectedPartnerItem'] != null){
-          temp = doc.data()['selectedPartnerItem'];
-      }
-    }
-    return temp;
+  selecteditemNameAndPriceFinderPartnerFN()async{
+    List<Map<String, dynamic>> partnerselectedmap = await Supabase.instance.client.from('rooms').select<PostgrestList>('partnerselecteditem').eq(iambuilder ? 'tradesman1' : 'tradesman2' , Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']).then((value) => value);
+    selectedPartnerItem = partnerselectedmap[0].values.first ?? "Select";
+    List<Map<String, dynamic>> partnerselecteditempricemap = await Supabase.instance.client.from('rooms').select<PostgrestList>('partnerselecteditemprice').eq(iambuilder ? 'tradesman1' : 'tradesman2' , Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']).then((value) => value);
+    selectedpartneritemprice = partnerselecteditempricemap[0].values.first ?? 0;
   }
-  void selectedItemPriceFinderFN(String? selectedItem,String selecteditemamount)async{
-      await DatabaseService().selectMyItemPrice(selectedItem!,selecteditemamount).then((value) => selectemitemprice = value);
-  }
-  void checkAmountAndPrice(String totalmoney,String selectedmyitem,String amount,String price){
-    setState(()async {
-     priceandamountenough = await DatabaseService().checkAmountAndPrice(totalmoney,selectedmyitem,amount,price);
-    });
-  }
-  void moveToSelectedItemAmountToPartner(String selectedmyitem,String selectedmyItemAmount)async{
-    await DatabaseService().moveToSelectedItemAmountToPartner(selectedmyitem,selectedmyItemAmount).then((value) {});
-  }
+  //void selectedItemPriceFinderFN(String? selectedItem,String selecteditemamount)async{
+  //    await DatabaseService().selectMyItemPrice(selectedItem!,selecteditemamount).then((value) => selectemitemprice = value);
+  //}
+  //void checkAmountAndPrice(String totalmoney,String selectedmyitem,String amount,String price){
+  //  setState(()async {
+  //   priceandamountenough = await DatabaseService().checkAmountAndPrice(totalmoney,selectedmyitem,amount,price);
+  //  });
+  //}
+  //void moveToSelectedItemAmountToPartner(String selectedmyitem,String selectedmyItemAmount)async{
+  //  await DatabaseService().moveToSelectedItemAmountToPartner(selectedmyitem,selectedmyItemAmount).then((value) {});
+  //}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
     width = MediaQuery.of(context).size.width;
     height = MediaQuery.of(context).size.height;
-    iambuilder = iambuilderFinderFN();
+    iambuilderFinderFN();
     checktotalMoney();
-    categoryGetter('alllist');
-    categoryGetterPartner('alllist');
+    categoryGetter();
+    categoryGetterPartner(iambuilder);
     allmylistLength = allmylistLengthFN(); 
     allpartnerlistLength = allpartnerlistLengthFN();
-    selectedItem = selecteditemFinderFN(tradeareasnapshot) ?? "Select";
-    selectedPartnerItem = selecteditemFinderPartnerFN(tradeareasnapshot) ?? "Select";
-    selectedItemPriceFinderFN(selectedItem,selecteditemamount);
+    selecteditemNameAndPriceFinderFN();
+    selecteditemNameAndPriceFinderPartnerFN();
+    //selectedItemPriceFinderFN(selectedItem,selecteditemamount);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -532,7 +513,7 @@ class _TradeAreaState extends State<TradeArea> {
                                             ),
                                             onChanged: (v){
                                               setState(() {
-                                                selecteditemamount = v;
+                                                selecteditemamount = int.parse(v);
                                               });
                                             },
                                           ),
@@ -546,7 +527,7 @@ class _TradeAreaState extends State<TradeArea> {
                                       SizedBox(
                                         height: 40,
                                         width: 70,
-                                        child: Center(child: Text(selectemitemprice,style: const TextStyle(color: Colors.purple,fontSize: 15),)),
+                                        child: Center(child: Text('$selecteditemprice',style: const TextStyle(color: Colors.purple,fontSize: 15),)),
                                       )
                                     ]
                                   ),
@@ -559,8 +540,8 @@ class _TradeAreaState extends State<TradeArea> {
                                         side: MaterialStatePropertyAll(BorderSide(color: Colors.green)),
                                       ),
                                       onPressed:selectedItem == '' || selectedItem == 'Select' ? null : (){
-                                        checkAmountAndPrice(totalmoney,selectedItem!,selecteditemamount,selectemitemprice);
-                                        moveToSelectedItemAmountToPartner(selectedItem!,selecteditemamount);
+                                       // checkAmountAndPrice(totalmoney,selectedItem!,selecteditemamount,selectemitemprice);
+                                       // moveToSelectedItemAmountToPartner(selectedItem!,selecteditemamount);
                                         if(priceandamountenough == {true:true}){
                                           
                                         }
@@ -630,12 +611,12 @@ class _TradeAreaState extends State<TradeArea> {
                                       )
                                     ]
                                   ),
-                                  const Column(
+                                  Column(
                                     children: [
-                                      Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
+                                      const Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
                                       SizedBox(
                                         height: 30,
-                                        child: Text('1500\$',style: TextStyle(color: Colors.purple,fontSize: 15),),
+                                        child: Text('$selectedpartneritemprice \$',style: const TextStyle(color: Colors.purple,fontSize: 15),),
                                       )
                                     ]
                                   ),
