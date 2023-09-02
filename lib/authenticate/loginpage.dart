@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/signup.dart';
 import 'package:zelix_trade/screens/home.dart';
-import 'package:zelix_trade/services/authservice.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,7 +14,6 @@ class _LoginPageState extends State<LoginPage> {
   String email = '';
   String password = '';
   String error = '';
-  final auth = AuthService();  
   final _formkey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {

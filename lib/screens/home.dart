@@ -7,7 +7,6 @@ import 'package:zelix_trade/screens/myproducts.dart';
 import 'package:zelix_trade/screens/createTrade.dart';
 import 'package:zelix_trade/screens/joinTrade.dart';
 import 'package:zelix_trade/screens/options.dart';
-import 'package:zelix_trade/services/authservice.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -23,8 +22,7 @@ class _HomeState extends State<Home> {
   List<Map<String,dynamic>> fruits = [];
   List<Map<String,dynamic>> vegetables = [];
   List<Map<String,dynamic>> tools = [];
-  List<Map<String,dynamic>> kitchen = [];
-  final AuthService auth = AuthService(); 
+  List<Map<String,dynamic>> kitchen = []; 
   @override
   void initState() {
     //deleteMyTradeArea();

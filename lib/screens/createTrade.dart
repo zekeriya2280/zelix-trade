@@ -15,7 +15,6 @@ class CreateTrade extends StatefulWidget {
 }
 
 class _CreateTradeState extends State<CreateTrade> {
-  final CollectionReference<Map<String, dynamic>> traderooms = FirebaseFirestore.instance.collection('traderooms');
   bool copychecked = false;
   @override
   void initState() {

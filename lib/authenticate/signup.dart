@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/authenticate/loginpage.dart';
 import 'package:zelix_trade/screens/Intro.dart';
-import 'package:zelix_trade/services/authservice.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -15,8 +14,7 @@ class _SignupPageState extends State<SignupPage> {
   String name = '';
   String email = '';
   String password = '';
-  String error = '';
-  final auth = AuthService();  
+  String error = ''; 
   final _formkey = GlobalKey<FormState>();
   @override
   void initState() {
