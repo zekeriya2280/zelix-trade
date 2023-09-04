@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,7 +13,6 @@ class JoinTrade extends StatefulWidget {
 }
 
 class _JoinTradeState extends State<JoinTrade> {
-  final CollectionReference<Map<String, dynamic>> traderooms = FirebaseFirestore.instance.collection('traderooms');
   String joinid = '';
   String notjoiningerror = '';
 
@@ -21,11 +20,7 @@ class _JoinTradeState extends State<JoinTrade> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: traderooms.snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) const CircularProgressIndicator();
-          return Scaffold(
+    return  Scaffold(
             backgroundColor: const Color.fromARGB(255, 90, 71, 15),
             appBar: AppBar(
               backgroundColor: const Color.fromARGB(198, 255, 191, 0),
@@ -198,6 +193,5 @@ class _JoinTradeState extends State<JoinTrade> {
               ),
             ),
           );
-        });
   }
 }

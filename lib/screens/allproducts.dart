@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,8 +26,6 @@ class _AllProductsState extends State<AllProducts> {
   List<Map<String,dynamic>> toolslist = [];
   List<Map<String,dynamic>> kitchenslist = [];
   List<String> dropdownitems = ['fruits'];
-  CollectionReference<Map<String, dynamic>> products= FirebaseFirestore.instance.collection('productions');
-  CollectionReference<Map<String, dynamic>> users= FirebaseFirestore.instance.collection('users');
   
   @override
   void initState() {
@@ -115,18 +113,15 @@ class _AllProductsState extends State<AllProducts> {
           }
           double newpercent = selection['percent'] + 0.5;
           String newincdec = 'inc';
-          int lastid = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('id').then(
-            
-            (value) {
-              
-              if(value == []) { 
-                return 0; 
-              }
-              else{
-                return List<Map<String,dynamic>>.from(value).last['id'];
-              }
-            }
-          );
+          List<Map<String, dynamic>> allids= await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('id').then((value) => value);
+                            List<int> temp = [];
+                            for (var i = 0; i < allids.length; i++) {
+                              for (var intelmnt in List<int>.from(allids[i].values)) {
+                                temp.add(int.parse(intelmnt.toString()));
+                              }
+                            }
+                            temp.sort();
+                            int lastid = temp.last;
           
           List<Map<String,dynamic>> itemnames = await Supabase.instance.client.from('boughtProducts').select<List<Map<String,dynamic>>>('name').then((value) => value);
          

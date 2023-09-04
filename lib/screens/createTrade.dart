@@ -17,7 +17,7 @@ class _CreateTradeState extends State<CreateTrade> {
   bool copychecked = false;
   @override
   void initState() {
-    print(widget.traderoomid);
+    //print(widget.traderoomid);
     super.initState();
   }
 
@@ -38,7 +38,7 @@ class _CreateTradeState extends State<CreateTrade> {
                        setState(() {
                          copychecked = true;
                        });
-                       print('copychecked : $copychecked');
+                       //print('copychecked : $copychecked');
                        }
                    );
     }

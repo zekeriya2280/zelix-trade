@@ -27,35 +27,9 @@ class _WrapperState extends State<Wrapper> {
       stream: supabase.auth.onAuthStateChange,
       builder: (context, snapshot) {
         //if(!snapshot.hasData){return CircularProgressIndicator(strokeWidth: 10,color: Colors.green,);}
-        print(snapshot.data);
+        //print(snapshot.data);
         return _redirect(snapshot.data);
       }
     );
   }
 }
-    /*
-    Scaffold(
-      body: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context,snapshot){
-          if(snapshot.hasData){
-            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: users.snapshots(),
-              builder: (context, snapshot) {
-                if(!snapshot.hasData){return const Center(child: CircularProgressIndicator(strokeWidth: 10,color: Colors.green,));}
-                return snapshot.data!.docs.any((doc){
-                  //print('nickname: ${FirebaseAuth.instance.currentUser!.uid}');
-                  return doc.data()['nickname'] == null && FirebaseAuth.instance.currentUser!.uid == doc.id;}) ? 
-                    const IntroPage() 
-                    : 
-                    const Home();
-              }
-            );
-          }
-          else{
-            return const LoginPage();
-          }
-        }),
-    );
-  }
-  */

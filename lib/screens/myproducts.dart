@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,8 +25,6 @@ class _MyProductsState extends State<MyProducts> {
   List<Map<String, dynamic>> toolslist = [];
   List<Map<String, dynamic>> kitchenslist = [];
   List<String> dropdownitems = ['fruits'];
-  CollectionReference<Map<String, dynamic>> users =
-      FirebaseFirestore.instance.collection('users');
   @override
   void initState() {
     getallLists();
@@ -269,63 +267,7 @@ class _MyProductsState extends State<MyProducts> {
     getTotalMoney().then((value) => 
       totalmoney = value
     );
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: users.snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-                child: CircularProgressIndicator(
-              color: Colors.green,
-              strokeWidth: 10,
-            ));
-          }
-          //if (currenttoptab == 'vegetables') {
-          //    categoryGetter('vegslist');
-          //} else if (currenttoptab == 'fruits'){
-          //    categoryGetter('frutslist');
-          //}
-          //else if (currenttoptab == 'tools'){
-          //  categoryGetter('toolslist');
-          //}
-          //else if (currenttoptab == 'kitchen'){
-          //  categoryGetter('kitchenslist');
-          //}
-          //for (var doc in snapshot.data!.docs) {
-          //  if (FirebaseAuth.instance.currentUser!.uid == doc.id) {
-          //    if (breaker) {
-          //       if (doc.data()['vegetables'] != null) {
-          //         for (var i = 0; i < doc.data()['vegetables'].length; i++) {
-          //           vegis.add(doc.data()['vegetables'][i].keys.first);
-          //         }
-          //         breaker = false;
-          //       }
-          //       if (doc.data()['fruits'] != null) {
-          //         for (var i = 0; i < doc.data()['fruits'].length; i++) {
-          //           frus.add(doc.data()['fruits'][i].keys.first);
-          //         }
-          //         breaker = false;
-          //       }
-          //       if (doc.data()['tools'] != null) {
-          //         for (var i = 0; i < doc.data()['tools'].length; i++) {
-          //           tols.add(doc.data()['tools'][i].keys.first);
-          //         }
-          //         breaker = false;
-          //       }
-          //       if (doc.data()['kitchen'] != null) {
-          //         for (var i = 0; i < doc.data()['kitchen'].length; i++) {
-          //           kitchens.add(doc.data()['kitchen'][i].keys.first);
-          //         }
-          //         breaker = false;
-          //       }
-          //    }
-          //  }
-          //}
-          //for (var element in snapshot.data!.docs) {
-          //    if(element.id == FirebaseAuth.instance.currentUser!.uid){
-          //      textprice = element.data()['totalmoney'].toString();
-          //    }
-          //}
-          return Scaffold(
+    return Scaffold(
             appBar: AppBar(
               actions: [
                 Padding(
@@ -493,7 +435,6 @@ class _MyProductsState extends State<MyProducts> {
               ),
             )),
           );
-        });
   }
   
 

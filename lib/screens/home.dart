@@ -121,7 +121,7 @@ class _HomeState extends State<Home> {
                            String traderoomid = '';
                            String mynickname = await Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'];
                            List<Map<String,dynamic>> idmaplist = await Supabase.instance.client.from('rooms').select<List<Map<String,dynamic>>>('id').then((value) => value);
-                           print(idmaplist);
+                           //print(idmaplist);
                            if(idmaplist.isEmpty || idmaplist == []){
                             traderoomid = '1';
                            }

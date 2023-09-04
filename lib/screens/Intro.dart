@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,7 +12,6 @@ class IntroPage extends StatefulWidget {
 }
 
 class _IntroPageState extends State<IntroPage> {
-  final CollectionReference<Map<String, dynamic>> users  = FirebaseFirestore.instance.collection('users');
   String nickname = '';
   String takennicknameerror = '';
 
@@ -26,22 +25,7 @@ class _IntroPageState extends State<IntroPage> {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: users.snapshots(),
-      builder: (context, snapshot) {
-        if(!snapshot.hasData){
-            return const Scaffold(body: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(flex: 1,child: Text('')),
-              Center(child: Text('Game preparing...',style: TextStyle(fontSize: 30,letterSpacing: 5),),),
-              SizedBox(height: 12,),
-              Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,)),
-              Expanded(flex: 1,child: Text('')),
-            ],
-                  ));
-        }
-            return Scaffold(
+    return Scaffold(
               appBar: AppBar(
                 backgroundColor: const Color.fromARGB(134, 255, 191, 0),
                 title: Row(
@@ -85,32 +69,20 @@ class _IntroPageState extends State<IntroPage> {
                     Container(
                       margin: const EdgeInsets.all(8),
                       child: ElevatedButton(onPressed: ()async{
-                            //    if(snapshot.data!.docs == []){
-                            //      print('a');
-                            //       setState(() {
-                            //        takennicknameerror = '';
-                            //      });
-                            //      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
-                            //    }
-                            //     else if(snapshot.data!.docs.any((e) => e.data().values.any((v) => v == nickname || nickname == ''))){
-                            //        print('b');
-                            //       setState(() {
-                            //         takennicknameerror = 'Enter a valid nickname';
-                            //       });
-                            //       
-                            //     }
-                            //     else{
-                            //        setState(() {
-                            //         takennicknameerror = '';
-                            //       });
-                            //       await DatabaseService().setNickname(nickname);
-                            //       await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
-                            //     }
+                            List<Map<String, dynamic>> allids= await Supabase.instance.client.from('users').select<PostgrestList>('id').then((value) => value);
+                            List<int> temp = [];
+                            for (var i = 0; i < allids.length; i++) {
+                              for (var intelmnt in List<int>.from(allids[i].values)) {
+                                temp.add(int.parse(intelmnt.toString()));
+                              }
+                            }
+                            temp.sort();
+                            int lastid = temp.last;
                             Supabase.instance.client.auth.currentUser!.userMetadata!.addAll({'nickname':nickname,'totalmoney': 5000});
                             await Supabase.instance.client.auth.updateUser(UserAttributes(data: Supabase.instance.client.auth.currentUser!.userMetadata!));
-                            await Supabase.instance.client.from('users').insert({'id':1,'name':nickname,'email': Supabase.instance.client.auth.currentUser!.email,'password': Supabase.instance.client.auth.currentUser!.userMetadata!['password'], 'totalmoney': 5000});
+                            await Supabase.instance.client.from('users').insert({'id':lastid + 1,'name':nickname,'email': Supabase.instance.client.auth.currentUser!.email,'password': Supabase.instance.client.auth.currentUser!.userMetadata!['password'], 'totalmoney': 5000});
                             
-                            await Future.delayed(const Duration(seconds: 1),(){
+                            await Future.delayed(const Duration(milliseconds: 500),(){
                               const Center(child: CircularProgressIndicator(color: Colors.green,strokeWidth: 10,));
                             });
                             await Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const Home()), );
@@ -143,7 +115,5 @@ class _IntroPageState extends State<IntroPage> {
                 ),
               ),
             );
-      }
-    );
   }
 }
