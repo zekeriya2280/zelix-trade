@@ -1,6 +1,7 @@
 
 import 'package:feature_notifier/feature_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zelix_trade/screens/home.dart';
@@ -43,6 +44,7 @@ class _TradeAreaState extends State<TradeArea> {
   bool partnerconfirmedtosell = false;
   bool iamconfirmedtobuy = false;
   bool iamconfirmedtosell = false;
+  String myMessageToPartner = '';
 
   String nameForPopupSell = '';
   int priceForPopupSell = 0;
@@ -63,6 +65,7 @@ class _TradeAreaState extends State<TradeArea> {
   String mySelectedItemIncdec = '';
   double mySelectedItemPercent = 0;
   double circularindicatorvalue = 0.0;
+  List<Map<String, dynamic>> allmassages = [];
   List<Map<String, dynamic>> frutslist = [];
   List<Map<String, dynamic>> vegslist = [];
   List<Map<String, dynamic>> toolslist = [];
@@ -297,104 +300,97 @@ class _TradeAreaState extends State<TradeArea> {
                  ),
                );
     }
-   Widget buildProductItemsPartner(int index, Map<String, dynamic> selection) {
-        return GestureDetector(
-                 onTap: selection['amount']==0 ? null : () => setState(() {
-                   resetDetailsPartner(index, selection);
-                 }),
-                 child: SizedBox(
-        height: 100,
-        child: Card(
-            color: selection['amount']==0 ? const Color.fromARGB(255, 151, 158, 151) : const Color.fromARGB(255, 98, 202, 101),
-            child: ListTile(
-              leading: SizedBox(
-                  height: 150,
-                  child: Image(
-                      height: 80,
-                      width: 70,
-                      image: AssetImage(
-                          'assets/images/${selection['name']}.png'))),
-              title: SizedBox(
-                  height: 100,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 2.0),
-                    child: Column(
-                      children: [
-                         Padding(
-                            padding: const EdgeInsets.only(right: 58.0),
-                            child: Text(
-                              selection['name'].toString().toUpperCase(),
-                              style: const TextStyle(
-                                  color: Color.fromARGB(255, 255, 255, 255),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold)),
-                         ),
-                         SizedBox(
-                           height: 60,
-                           child: Row(
-                             children: [
-                               SizedBox(
-                                  width: width / 2 - 75,
-                                  child: ListView(
-                                    scrollDirection: Axis.vertical,
-                                    children: [
-                                      const SizedBox(
-                                          height: 5, child: Text('')),
-                                      Center(
-                                          child: Text(
-                                              '${selection['price']} \$',
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                  fontWeight:
-                                                      FontWeight.bold))),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Center(
-                                          child: Text('${selection['amount']}',
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold)))
-                                    ],
-                                  ),
-                               ),
-                               const Expanded(flex: 2, child: Text('')),
-                               SizedBox(
-                                 width: width / 2 - 75,
-                                 child: ListView(
-                                   scrollDirection: Axis.vertical,
-                                   children: [
-                                     const SizedBox(
-                                         height: 5, child: Text('')),
-                                     Center(
-                                        child: Image(
-                                            height: 30,
-                                            width: 100,
-                                            image: AssetImage(selection['amount']==0 ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Center(
-                                        child: Text(
-                                            '${selection['percent']}%',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold)))
-                                  ],
-                                ),
-                              ),
-                              const Expanded(flex: 1, child: Text('')),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
+   Widget buildProductItemsPartner(int index, Map<String, dynamic> massagemap) {
+        return SizedBox(
+        height: 40,
+        child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: massagemap == null ? const Color.fromARGB(255, 151, 158, 151) : Color.fromARGB(255, 206, 162, 59),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                 Center(
+                   child: Text(
+                     massagemap.keys.first.toString().toUpperCase() + '  :  ',
+                     style: const TextStyle(
+                         color: Colors.white,
+                         fontSize: 11,
+                         fontWeight: FontWeight.bold)),
+                 ),
+                 Center(
+                   child: Text(
+                     massagemap.values.first.toString().toUpperCase(),
+                     style: const TextStyle(
+                         color: Colors.white,
+                         fontSize: 11,
+                         fontWeight: FontWeight.bold)),
+                 ),
+                            
+               //  SizedBox(
+               //    height: 60,
+               //    child: Row(
+               //      children: [
+               //        SizedBox(
+               //           width: width / 2 - 75,
+               //           child: ListView(
+               //             scrollDirection: Axis.vertical,
+               //             children: [
+               //               const SizedBox(
+               //                   height: 5, child: Text('')),
+               //               Center(
+               //                   child: Text(
+               //                       '${selection['price']} \$',
+               //                       style: const TextStyle(
+               //                           color: Colors.white,
+               //                           fontSize: 14,
+               //                           fontWeight:
+               //                               FontWeight.bold))),
+               //               const SizedBox(
+               //                 height: 5,
+               //               ),
+               //               Center(
+               //                   child: Text('${selection['amount']}',
+               //                       style: const TextStyle(
+               //                           color: Colors.white,
+               //                           fontSize: 14,
+               //                           fontWeight: FontWeight.bold)))
+               //             ],
+               //           ),
+               //        ),
+               //        const Expanded(flex: 2, child: Text('')),
+               //        SizedBox(
+               //          width: width / 2 - 75,
+               //          child: ListView(
+               //            scrollDirection: Axis.vertical,
+               //            children: [
+               //              const SizedBox(
+               //                  height: 5, child: Text('')),
+               //              Center(
+               //                 child: Image(
+               //                     height: 30,
+               //                     width: 100,
+               //                     image: AssetImage(selection['amount']==0 ? 'assets/images/stabil.png' : selection['incdec'] =='inc'? 'assets/images/inc.png': 'assets/images/dec.png'))),
+               //             const SizedBox(
+               //               height: 5,
+               //             ),
+               //             Center(
+               //                 child: Text(
+               //                     '${selection['percent']}%',
+               //                     style: const TextStyle(
+               //                         color: Colors.white,
+               //                         fontSize: 14,
+               //                         fontWeight: FontWeight.bold)))
+               //           ],
+               //         ),
+               //       ),
+               //       const Expanded(flex: 1, child: Text('')),
+               //     ],
+               //   ),
+               // ),
+              ],
             )),
-      )
       );
   }
   int allmylistLengthFN(){
@@ -428,11 +424,11 @@ class _TradeAreaState extends State<TradeArea> {
                                  .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'])
                                  .then((value) => value);
     setState(() {
-      partnerNickname = partnernicknamemap[0].values.first.toString();
+      partnerNickname = partnernicknamemap.isEmpty ? '' : partnernicknamemap[0].values.first.toString();
     });
     List<Map<String, dynamic>> partneremailmap = await Supabase.instance.client.from('users').select<PostgrestList>('email').eq('name',partnernicknamemap[0].values.first).then((value) => value);
     setState(() {
-      partnerEmail = partneremailmap[0].values.first.toString();
+      partnerEmail = partneremailmap.isEmpty ? '' : partneremailmap[0].values.first.toString();
     });
   }
   findMySelectedItemProperties()async{
@@ -452,11 +448,11 @@ class _TradeAreaState extends State<TradeArea> {
                                                                                               .eq('owner', Supabase.instance.client.auth.currentUser!.email)
                                                                                               .eq('name', selectedItem).then((value) => value);
     setState(() {
-      mySelectedItemPrice = int.parse(mypricelist[0].values.first.toString());
-      mySelectedItemAmount = int.parse(myamountlist[0].values.first.toString());
-      mySelectedItemCategory = mycategorymap[0].values.first.toString();
-      mySelectedItemIncdec = myincdecmap[0].values.first.toString();
-      mySelectedItemPercent = double.parse(mypercentmap[0].values.first.toString());
+      mySelectedItemPrice = mypricelist.isEmpty ? 0 : int.parse(mypricelist[0].values.first.toString());
+      mySelectedItemAmount = myamountlist.isEmpty ? 0 : int.parse(myamountlist[0].values.first.toString());
+      mySelectedItemCategory = mycategorymap.isEmpty ? '' : mycategorymap[0].values.first.toString();
+      mySelectedItemIncdec = myincdecmap.isEmpty ? '' : myincdecmap[0].values.first.toString();
+      mySelectedItemPercent = mypercentmap.isEmpty ? 0.0 : double.parse(mypercentmap[0].values.first.toString());
     });
   }
   checkWhoBuyingAndWhoSelling()async{
@@ -556,12 +552,12 @@ class _TradeAreaState extends State<TradeArea> {
     allmylistLength = allmylistLengthFN(); 
     allpartnerlistLength = allpartnerlistLengthFN();
     selecteditemNameAndPriceFinderFN();
-    selecteditemNameAndPriceFinderPartnerFN();
+    //selecteditemNameAndPriceFinderPartnerFN();
     findPartnerEmail();
     findMySelectedItemProperties();
-    checkWhoBuyingAndWhoSelling();
-    checkForPopUpEntities();
-    checkNooneNotificating();
+    //checkWhoBuyingAndWhoSelling();
+    //checkForPopUpEntities();
+    //checkNooneNotificating();
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -830,10 +826,10 @@ class _TradeAreaState extends State<TradeArea> {
                                 width: width,
                                 child: Center(
                                     child: ListView.separated(
-                                        itemBuilder: (context, index) => buildProductItemsPartner(index,allpartnerlist[index]),
+                                        itemBuilder: (context, index) => buildProductItemsPartner(index,allmassages[index]),
                                         separatorBuilder: (context, index) =>
                                             Container(height: 1,),
-                                        itemCount: allpartnerlistLength
+                                        itemCount: allmassages.length
                                                 )
                                                 )
                               ),
@@ -848,33 +844,26 @@ class _TradeAreaState extends State<TradeArea> {
                                     const SizedBox(width: 0,),
                                     Column(
                                       children: [
-                                        const Text('Item',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
-                                        SizedBox(
-                                          height: 40,
-                                          child: Center(child: Text(selectedPartnerItem ?? 'Select',style: const TextStyle(color: Colors.purple,fontSize: 15),)),
-                                        )
-                                      ]
-                                    ),
-                                    Column(
-                                      children: [
                                         const SizedBox(
-                                          height: 28,
-                                          child: Text('Amount',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),)),
+                                          height: 15,
+                                          child: Text('Write a message to your partner',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 12),)),
                                         SizedBox(
                                           //color: Colors.yellow,
-                                          height: 25,
-                                          width: 100,
+                                          height: 47,
+                                          width: width/1.44,
                                           child: Center(
                                             heightFactor: 2,
                                             child: TextFormField(
+                                              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                              maxLength: 33,
                                               textAlignVertical: TextAlignVertical.bottom,
                                               cursorHeight: 20,
-                                              maxLength: 5,
-                                              style: const TextStyle(color: Colors.purple),
+                                              //maxLines: 2,
+                                              style: const TextStyle(color: Colors.purple,fontSize: 12.5),
                                               textAlign: TextAlign.center,
                                               cursorColor: Colors.purple,
                                               decoration: InputDecoration(
-                                                hintText: "1",
+                                                hintText: "Massage to your partner",
                                                 counterText: "",
                                                 focusColor: Colors.green,
                                                 border: OutlineInputBorder(
@@ -884,51 +873,13 @@ class _TradeAreaState extends State<TradeArea> {
                                                   borderRadius: BorderRadius.circular(10.0),
                                                 )
                                               ),
-                                              onChanged: selectedPartnerItem == '' || selectedPartnerItem == 'Select' ? null : (v)async{
-                                                bool _isNumeric(String result) {
-                                                  if (result == null) {
-                                                    return false;
-                                                  }
-                                                  return double.tryParse(result) != null;
-                                                }
-                                                if(_isNumeric(v)){
-                                                    setState(() {
-                                                      partnerenteredamountnotanumber = false;
-                                                    });
-                                                    
-                                                    await Supabase.instance.client.from('rooms').update({'partnerselecteditemamount' : int.parse(v.toString())})
-                                                                                                .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
-                                                    List<Map<String, dynamic>> partnerpricelist = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price')
-                                                                                                .eq('owner', partnerEmail)
-                                                                                                .eq('name', selectedPartnerItem);
-                                                    await Supabase.instance.client.from('rooms').update({'partnerselecteditemprice' : int.parse(v.toString()) * int.parse(partnerpricelist[0].values.first.toString())})
-                                                                                                .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
-                                                                                                
-                                                    setState(() {
-                                                      selectedpartneritemamount = int.parse(v.toString());
-                                                      selectedpartneritemprice = int.parse(v.toString()) * int.parse(partnerpricelist[0].values.first.toString());
-                                                    });
-                                                    iamsellnotificating ? null : await Supabase.instance.client.from('rooms').update({'buynotification' : {Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'] : selectedPartnerItem}})
-                                                                                        .eq(iambuilder ? 'tradesman1': 'tradesman2', Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
-                                                }
-                                                else{
-                                                  setState(() {
-                                                    partnerenteredamountnotanumber = true;
-                                                  });
-                                                }
+                                              onChanged:(v)async{
+                                                setState(() {
+                                                  myMessageToPartner = v;
+                                                });
                                               },
                                             ),
                                           ),
-                                        )
-                                      ]
-                                    ),
-                                    Column(
-                                      children: [
-                                        const Text('Price',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,letterSpacing: 2,fontSize: 15),),
-                                        SizedBox(
-                                          height: 40,
-                                          width: 70,
-                                          child: Center(child: Text('$selectedpartneritemprice',style: const TextStyle(color: Colors.purple,fontSize: 15),)),
                                         )
                                       ]
                                     ),
@@ -937,107 +888,109 @@ class _TradeAreaState extends State<TradeArea> {
                                       width: 100,
                                       child: ElevatedButton(
                                         style:  ButtonStyle(
-                                          backgroundColor: selectedPartnerItem == '' || selectedPartnerItem == 'Select' || partnerenteredamountnotanumber || iambuynotificating ? const MaterialStatePropertyAll(Colors.grey) : const MaterialStatePropertyAll(Colors.white),
+                                          backgroundColor: myMessageToPartner == '' ? const MaterialStatePropertyAll(Colors.grey) : const MaterialStatePropertyAll(Colors.white),
                                           shadowColor: const MaterialStatePropertyAll(Colors.green),
                                           side: const MaterialStatePropertyAll(BorderSide(color: Colors.green)),
                                         ),
-                                        onPressed:selectedPartnerItem == '' || selectedPartnerItem == 'Select' || partnerenteredamountnotanumber || iambuynotificating ? null : ()async{
-                                          List<Map<String, dynamic>> partneramountmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('amount')
-                                                                                                .eq('owner', partnerEmail)
-                                                                                                .eq('name', selectedPartnerItem);
-                                          
-                                          //print(int.parse(myamountmap[0].values.first.toString()));
-                                          if(selectedpartneritemamount > int.parse(partneramountmap[0].values.first.toString())){
+                                        onPressed:myMessageToPartner == '' ? null : ()async{
+                                            List<Map<String,dynamic>> massageslistmap = await Supabase.instance.client.from('rooms')
+                                                                          .select<PostgrestList>('massages')
+                                                                          .eq(iambuilder ? 'tradesman1' : 'tradesman2',Supabase.instance.client.auth.currentUser!.userMetadata!['nickname'])
+                                                                          .then((value) => value);
+                                            List<Map<String,dynamic>> temp = [];
+                                            for (var i = 0; i < List<Map<String,dynamic>>.from(massageslistmap[0].values.first).length; i++) {
+                                              temp.add(List<Map<String,dynamic>>.from(massageslistmap[0].values.first)[i]);
+                                            }
+                                            temp.add({Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']:myMessageToPartner});
                                             setState(() {
-                                              partnernotenoughtamounterror = 'Not enough amount';
-                                            });
-                                          }
-                                          else{
-                                            
-                                            if(partnerconfirmedtobuy){
-                                                  setState(() {
-                                                    partnernotenoughtamounterror = '';
-                                                  });
-                                                  String result;
-                                                  setState(() {
-                                                          mypartnerpagenotready = true; 
-                                                  });
-                                                  setState(() {
-                                                    circularindicatorvalue = 0.1;
-                                                  });
-                                                  List<Map<String, dynamic>> partnertotalmoneymap = await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('name',partnerNickname).then((value) => value);
-                                                  List<Map<String, dynamic>> partnercategorymap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('category')
-                                                                                                      .eq('owner', partnerEmail)
-                                                                                                      .eq('name', selectedPartnerItem);
-                                                  List<Map<String, dynamic>> partnerpricemap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price')
-                                                                                                      .eq('owner', partnerEmail)
-                                                                                                      .eq('name', selectedPartnerItem);
-                                                  List<Map<String, dynamic>> partnerincdecmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('incdec')
-                                                                                                      .eq('owner', partnerEmail)
-                                                                                                      .eq('name', selectedPartnerItem);
-                                                  List<Map<String, dynamic>> partnerpercentmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('percent')
-                                                                                                      .eq('owner', partnerEmail)
-                                                                                                      .eq('name', selectedPartnerItem);
-                                                  List<Map<String, dynamic>> allids= await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('id').then((value) => value);
-                                                  /**/List<int> temp = [];
-                                                  /**/for (var i = 0; i < allids.length; i++) {
-                                                    for (var intelmnt in List<int>.from(allids[i].values)) {
-                                                      temp.add(int.parse(intelmnt.toString()));
-                                                    }
-                                                  }
-                                                  /**/temp.sort();
-                                                  /**/int lastid = temp.last;
-                                                  /**/bool alreadyexist = false;
-                                                  setState(() {
-                                                    circularindicatorvalue = 0.3;
-                                                  });
-                                                  List<Map<String, dynamic>> myamountmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('amount')
-                                                                                                      .eq('owner', Supabase.instance.client.auth.currentUser!.email)
-                                                                                                      .eq('name', selectedPartnerItem);
-                                                  /**/List<Map<String, dynamic>> myitemnamesmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('name').eq('owner', Supabase.instance.client.auth.currentUser!.email).then((value) => value);
-                                                  alreadyexist = myitemnamesmap.any((map) {return map['name'].toString() == selectedPartnerItem;});
-                                                  //print(alreadyexist);
-                                                  if(alreadyexist){//partner amount should increase
-                                                    await Supabase.instance.client.from('boughtProducts').update({'amount':int.parse(myamountmap[0].values.first.toString()) + selectedpartneritemamount}).eq('owner', Supabase.instance.client.auth.currentUser!.email).eq('name', selectedPartnerItem);
-                                                  }
-                                                  else{
-                                                    await Supabase.instance.client.from('boughtProducts').insert({'id': lastid + 1,'owner':Supabase.instance.client.auth.currentUser!.email,'category':partnercategorymap[0].values.first.toString(),'name':selectedPartnerItem,'amount':selectedpartneritemamount,'price':partnerpricemap[0].values.first.toString(),'incdec':partnerincdecmap[0].values.first.toString(),'percent':partnerpercentmap[0].values.first.toString()});
-                                                  }
-                                                  setState(() {
-                                                    circularindicatorvalue = 0.6;
-                                                  });
-                                                  //partner AMOUNT decrease.
-                                                  /**/await Supabase.instance.client.from('boughtProducts').update({'amount':int.parse(partneramountmap[0].values.first.toString()) - selectedpartneritemamount})
-                                                                                                       .eq('name',selectedPartnerItem)
-                                                                                                       .eq('owner', partnerEmail);
-                                                  /**/await Supabase.instance.client.from('users').update({'totalmoney' : totalmoney - selectedpartneritemprice})
-                                                                                                  .eq('name', Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
-                                                      setState(() {
-                                                        circularindicatorvalue = 0.9;
-                                                      });
-                                                      result = await Supabase.instance.client.from('users').update({'totalmoney' : int.parse(partnertotalmoneymap[0].values.first.toString()) + selectedpartneritemprice})
-                                                                                                           .eq('name', partnerNickname).then((value) => 'something');
-
-                                                      if(result == null){
-                                                        setState(() {
-                                                          mypartnerpagenotready = true; 
-                                                        });
-                                                      }
-                                                      else{
-                                                        setState(() {
-                                                          mypartnerpagenotready = false;
-                                                        });
-                                                        
-                                                      }
+                                              allmassages = temp;
+                                            });                      
+                                            if(myMessageToPartner != ''){
+                                                  await Supabase.instance.client.from('rooms').update({'massages' : temp})
+                                                                                              .eq(iambuilder ? 'tradesman1': 'tradesman2', Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
+                                                  //setState(() {
+                                                  //  partnernotenoughtamounterror = '';
+                                                  //});
+                                                  //String result;
+                                                  //setState(() {
+                                                  //        mypartnerpagenotready = true; 
+                                                  //});
+                                                  //setState(() {
+                                                  //  circularindicatorvalue = 0.1;
+                                                  //});
+                                                  //List<Map<String, dynamic>> partnertotalmoneymap = await Supabase.instance.client.from('users').select<PostgrestList>('totalmoney').eq('name',partnerNickname).then((value) => value);
+                                                  //List<Map<String, dynamic>> partnercategorymap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('category')
+                                                  //                                                    .eq('owner', partnerEmail)
+                                                  //                                                    .eq('name', selectedPartnerItem);
+                                                  //List<Map<String, dynamic>> partnerpricemap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('price')
+                                                  //                                                    .eq('owner', partnerEmail)
+                                                  //                                                    .eq('name', selectedPartnerItem);
+                                                  //List<Map<String, dynamic>> partnerincdecmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('incdec')
+                                                  //                                                    .eq('owner', partnerEmail)
+                                                  //                                                    .eq('name', selectedPartnerItem);
+                                                  //List<Map<String, dynamic>> partnerpercentmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('percent')
+                                                  //                                                    .eq('owner', partnerEmail)
+                                                  //                                                    .eq('name', selectedPartnerItem);
+                                                  //List<Map<String, dynamic>> allids= await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('id').then((value) => value);
+                                                  ///**/List<int> temp = [];
+                                                  ///**/for (var i = 0; i < allids.length; i++) {
+                                                  //  for (var intelmnt in List<int>.from(allids[i].values)) {
+                                                  //    temp.add(int.parse(intelmnt.toString()));
+                                                  //  }
+                                                  //}
+                                                  ///**/temp.sort();
+                                                  ///**/int lastid = temp.last;
+                                                  ///**/bool alreadyexist = false;
+                                                  //setState(() {
+                                                  //  circularindicatorvalue = 0.3;
+                                                  //});
+                                                  //List<Map<String, dynamic>> myamountmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('amount')
+                                                  //                                                    .eq('owner', Supabase.instance.client.auth.currentUser!.email)
+                                                  //                                                    .eq('name', selectedPartnerItem);
+                                                  ///**/List<Map<String, dynamic>> myitemnamesmap = await Supabase.instance.client.from('boughtProducts').select<PostgrestList>('name').eq('owner', Supabase.instance.client.auth.currentUser!.email).then((value) => value);
+                                                  //alreadyexist = myitemnamesmap.any((map) {return map['name'].toString() == selectedPartnerItem;});
+                                                  ////print(alreadyexist);
+                                                  //if(alreadyexist){//partner amount should increase
+                                                  //  await Supabase.instance.client.from('boughtProducts').update({'amount':int.parse(myamountmap[0].values.first.toString()) + selectedpartneritemamount}).eq('owner', Supabase.instance.client.auth.currentUser!.email).eq('name', selectedPartnerItem);
+                                                  //}
+                                                  //else{
+                                                  //  await Supabase.instance.client.from('boughtProducts').insert({'id': lastid + 1,'owner':Supabase.instance.client.auth.currentUser!.email,'category':partnercategorymap[0].values.first.toString(),'name':selectedPartnerItem,'amount':selectedpartneritemamount,'price':partnerpricemap[0].values.first.toString(),'incdec':partnerincdecmap[0].values.first.toString(),'percent':partnerpercentmap[0].values.first.toString()});
+                                                  //}
+                                                  //setState(() {
+                                                  //  circularindicatorvalue = 0.6;
+                                                  //});
+                                                  ////partner AMOUNT decrease.
+                                                  ///**/await Supabase.instance.client.from('boughtProducts').update({'amount':int.parse(partneramountmap[0].values.first.toString()) - selectedpartneritemamount})
+                                                  //                                                     .eq('name',selectedPartnerItem)
+                                                  //                                                     .eq('owner', partnerEmail);
+                                                  ///**/await Supabase.instance.client.from('users').update({'totalmoney' : totalmoney - selectedpartneritemprice})
+                                                  //                                                .eq('name', Supabase.instance.client.auth.currentUser!.userMetadata!['nickname']);
+                                                  //    setState(() {
+                                                  //      circularindicatorvalue = 0.9;
+                                                  //    });
+                                                  //    result = await Supabase.instance.client.from('users').update({'totalmoney' : int.parse(partnertotalmoneymap[0].values.first.toString()) + selectedpartneritemprice})
+                                                  //                                                         .eq('name', partnerNickname).then((value) => 'something');
+//
+                                                  //    if(result == null){
+                                                  //      setState(() {
+                                                  //        mypartnerpagenotready = true; 
+                                                  //      });
+                                                  //    }
+                                                  //    else{
+                                                  //      setState(() {
+                                                  //        mypartnerpagenotready = false;
+                                                  //      });
+                                                  //      
+                                                  //    }
                                               }
                                               else{
                                                 setState(() {
                                                   const CircularProgressIndicator(strokeWidth: 10,color: Colors.green,);
                                                 });
                                               }
-                                          }
+                                          
                                         }, 
-                                        child: const Center(child: Text('BUY',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
+                                        child: const Center(child: Text('SEND',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 15),),)),
                                     )
                                   ],
                                 ),
